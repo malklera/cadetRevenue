@@ -2,14 +2,17 @@
 
 Allow to download a note with the differents shipments and calculate how much do you made.
 
-I have my notes across the working day on Google Keep note taking app on my cellphone, this program will hit the Google API and download the notes onto the directory the command is run from.
+I have my notes across the working day on Google Keep note taking app on my cellphone, you have to manually create a text file with the correct name, then copy into it the content of the note.
+
+I saw something about hiting the google api, but is too complicate for me at this moment.
 
 ## Format
 
 The note has to be a text file, with the following format, before processing the format is check, if it is invalid, the user will be ask to correct it.
 
 
-Name file: month<space>year.txt
+Name file: month-year.txt
+Where year is the four digit numerical representation, month is the word on english
 First line: Canon<space>int
 Subsecuent lines: Entry
 Entry: 

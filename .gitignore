@@ -1,0 +1,16 @@
+# Template: Go.AllowList.gitignore
+
+# Ignore
+*
+!*/
+/test/
+
+# Allow
+!/.gitignore
+
+!*.go
+!go.sum
+!go.mod
+
+!README.md
+!LICENSE
