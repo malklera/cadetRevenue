@@ -10,12 +10,11 @@ import (
 )
 
 var (
-	canon_re = regexp.MustCompile(`[a-zA-ZáéíóúÁÉÍÓÚñÑ]+ \d+`)
-    change_canon_re = regexp.MustCompile(`[a-zA-ZáéíóúÁÉÍÓÚñÑ]+ \d+\/\d+ [a-zA-ZáéíóúÁÉÍÓÚñÑ]+ \d+`)
-    day1_re = regexp.MustCompile(`[a-zA-ZáéíóúÁÉÍÓÚñÑ]+ \d+\/\d+`)
-    day2_re = regexp.MustCompile(`[a-zA-ZáéíóúÁÉÍÓÚñÑ]+ \d+\/\d+:-?\d+`)
-    morning_re = regexp.MustCompile(`M:((\d+(\+\d+)*(-\d+)?)|(-\d+))`)
-    afternoon_re = regexp.MustCompile(`T:-?\d+([+-]\d+)*`)
+	fileNameRe = regexp.MustCompile(`^(Enero|Febrero|Marzo|Abril|Mayo|Junio|Julio|Agosto|Septiembre|Octubre|Noviembre|Diciembre) \d{4}.txt$`)
+	canonRe = regexp.MustCompile(`^Canon \d+$`)
+    dayNoWorkRe = regexp.MustCompile(`^(Lunes|Martes|Miércoles|Miercoles|Jueves|Viernes|Sábado|Sabado) \d{1,2}\/\d{1,2}: *(0|-\d+)$`)
+    dayWorkRe = regexp.MustCompile(`^(Lunes|Martes|Miércoles|Miercoles|Jueves|Viernes|Sábado|Sabado) \d{1,2}\/\d{1,2}$`)
+    procedingsRe = regexp.MustCompile(`^(M|T): *(?:-\d+|\d+(?:\+\d+)*(?:-\d+)?)$`)
 )
 
 func processNotes() {
@@ -33,6 +32,7 @@ func processNotes() {
 	}
 
 	for _, file := range textFiles {
+		//check the fileName to be the correct format
 		if err := checkFormat(file.Name()); err != nil {
 			log.Printf("Error on checkFormat(%s) : %v", file.Name(), err)
 		}

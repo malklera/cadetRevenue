@@ -13,7 +13,9 @@ The note has to be a text file, with the following format, before processing the
 
 Name file: month-year.txt
 Where year is the four digit numerical representation, month is the word on english
+
 First line: Canon<space>int
+
 Subsecuent lines: Entry
 Entry: 
 Day<space>Date:Procedings
@@ -25,13 +27,17 @@ Day<space>Date
 M: Movements
 T: Movements
 Followed by either another entry or end of file
+
 Where Day can be:
 Lunes, Martes, Miércoles, Miercoles, Jueves, Viernes, Sábado, Sabado
+
 Date can be:
 1/1, 01/01, 01/1, 1/01
 Each has to be a valid date of the corresponding month-year
+
 Procedings can be: ignore spaces
 0, -int
+
 Movements can be: ignore spaces
 0, int, -int, int+int..., int...-int
 
