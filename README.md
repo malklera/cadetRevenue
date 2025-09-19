@@ -11,7 +11,7 @@ I saw something about hiting the google api, but is too complicate for me at thi
 The note has to be a text file, with the following format, before processing the format is check, if it is invalid, the user will be ask to correct it.
 
 
-Name file: month-year.txt
+Name file: month-\[number of notes of this month\]-year.txt
 Where year is the four digit numerical representation, month is the word on english
 
 First line: Canon<space>int

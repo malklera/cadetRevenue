@@ -10,12 +10,22 @@ import (
 )
 
 var (
-	fileNameRe = regexp.MustCompile(`^(Enero|Febrero|Marzo|Abril|Mayo|Junio|Julio|Agosto|Septiembre|Octubre|Noviembre|Diciembre) \d{4}.txt$`)
-	canonRe = regexp.MustCompile(`^Canon \d+$`)
-    dayNoWorkRe = regexp.MustCompile(`^(Lunes|Martes|Miércoles|Miercoles|Jueves|Viernes|Sábado|Sabado) \d{1,2}\/\d{1,2}: *(0|-\d+)$`)
-    dayWorkRe = regexp.MustCompile(`^(Lunes|Martes|Miércoles|Miercoles|Jueves|Viernes|Sábado|Sabado) \d{1,2}\/\d{1,2}$`)
-    procedingsRe = regexp.MustCompile(`^(M|T): *(?:-\d+|\d+(?:\+\d+)*(?:-\d+)?)$`)
+	fileNameRe   = regexp.MustCompile(`^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)-\d{1}-\d{4}.txt$`)
+	canonRe      = regexp.MustCompile(`^Canon \d+$`)
+	dayNoWorkRe  = regexp.MustCompile(`^(Lunes|Martes|Miércoles|Miercoles|Jueves|Viernes|Sábado|Sabado) \d{1,2}\/\d{1,2}: *(0|-\d+)$`)
+	dayWorkRe    = regexp.MustCompile(`^(Lunes|Martes|Miércoles|Miercoles|Jueves|Viernes|Sábado|Sabado) \d{1,2}\/\d{1,2}$`)
+	procedingsRe = regexp.MustCompile(`^(M|T): *(?:-\d+|\d+(?:\+\d+)*(?:-\d+)?)$`)
 )
+
+type Entry struct {
+	ID       int64
+	Year     int
+	Month    int
+	Day      int
+	Canon    int
+	Income   int
+	Expenses int
+}
 
 func processNotes() {
 	files, err := os.ReadDir(".")
@@ -33,6 +43,11 @@ func processNotes() {
 
 	for _, file := range textFiles {
 		//check the fileName to be the correct format
+		if validFileName := fileNameRe.MatchString(file.Name()); validFileName {
+			// get the year from here, the month and number do not matter
+		} else {
+			fmt.Printf("'%s' is not a valid file name\n", file.Name())
+		}
 		if err := checkFormat(file.Name()); err != nil {
 			log.Printf("Error on checkFormat(%s) : %v", file.Name(), err)
 		}
