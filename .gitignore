@@ -1,8 +1,11 @@
 # Template: Go.AllowList.gitignore
 
 # Ignore
+# all files
 *
+# track all sub-directories
 !*/
+# un-track test directory
 /test/
 
 # Allow
@@ -14,3 +17,9 @@
 
 !README.md
 !LICENSE
+
+!/internal/
+!/internal/**/*
+
+!/cmd/
+!/cmd/**/*
