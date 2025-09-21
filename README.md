@@ -77,3 +77,13 @@ Row: id, year int, month int, day int, canon int, income int, expenses int
 ## Structure of the program
 
 - A main function from where it calls the main menu
+
+### menu()
+
+1) ProcessNotes()
+
+- List all files on current directory
+- Put .txt files on textFiles slice
+- Loop through the textFiles and check the format of the name
+    - Correct format: get the year from the fileName
+    - Incorrect format: prompt the user to change the file name

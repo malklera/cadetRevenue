@@ -1,62 +1,107 @@
-package main
+package internal
 
 import (
+	"bufio"
+	"cadetRevenue/internal/database"
+	"errors"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
 var (
-	fileNameRe   = regexp.MustCompile(`^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)-\d{1}-\d{4}.txt$`)
+	fileNameRe   = regexp.MustCompile(`^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)-\d{1}-(\d{4})\.txt$`)
 	canonRe      = regexp.MustCompile(`^Canon \d+$`)
 	dayNoWorkRe  = regexp.MustCompile(`^(Lunes|Martes|Miércoles|Miercoles|Jueves|Viernes|Sábado|Sabado) \d{1,2}\/\d{1,2}: *(0|-\d+)$`)
 	dayWorkRe    = regexp.MustCompile(`^(Lunes|Martes|Miércoles|Miercoles|Jueves|Viernes|Sábado|Sabado) \d{1,2}\/\d{1,2}$`)
 	procedingsRe = regexp.MustCompile(`^(M|T): *(?:-\d+|\d+(?:\+\d+)*(?:-\d+)?)$`)
 )
 
-type Entry struct {
-	ID       int64
-	Year     int
-	Month    int
-	Day      int
-	Canon    int
-	Income   int
-	Expenses int
-}
-
-func processNotes() {
-	files, err := os.ReadDir(".")
+func ProcessNotes() error {
+	allFiles, err := os.ReadDir(".")
 	if err != nil {
-		log.Printf("Error listing files: %v", err)
+		return fmt.Errorf("Error listing files: %w", err)
 	}
 
-	var textFiles []os.DirEntry
+	var textFiles []fs.DirEntry
 
-	for _, file := range files {
-		if strings.HasSuffix(file.Name(), ".txt") {
+	for _, file := range allFiles {
+		if !file.IsDir() && strings.HasSuffix(file.Name(), ".txt") {
 			textFiles = append(textFiles, file)
 		}
 	}
 
+	if len(textFiles) == 0 {
+		fmt.Println("No files to process")
+		return nil
+	}
+
+	var reader = bufio.NewReader(os.Stdin)
+
 	for _, file := range textFiles {
-		//check the fileName to be the correct format
-		if validFileName := fileNameRe.MatchString(file.Name()); validFileName {
-			// get the year from here, the month and number do not matter
+		originalFileName := file.Name()
+		currentFileName := originalFileName
+		for {
+			//check the fileName to be the correct format
+			if fileNameRe.MatchString(currentFileName) {
+				break
+			} else {
+				fmt.Printf("'%s' is not a valid file name\n", currentFileName)
+				fmt.Println("The correct format is: month-int-year.txt")
+				fmt.Println("Where 'month' is a valid month written in spanish word")
+				fmt.Println("Where 'int' is a number from 0 to 9")
+				fmt.Println("Where 'year' is a number from 0000 to 9999")
+				fmt.Printf("> ")
+
+				input, err := reader.ReadString('\n')
+				if err != nil {
+					fmt.Printf("Error reading input: %v", err)
+				} else {
+					input = strings.TrimSpace(input)
+					newPath := filepath.Join(".", input)
+					if _, err := os.Stat(newPath); err == nil {
+						fmt.Printf("File name '%s' already exist, input a different one", input)
+					} else if !errors.Is(err, fs.ErrNotExist) {
+						fmt.Printf("Error checking if file '%s' exist: %v", input, err)
+					} else {
+						currentFileName = input
+					}
+				}
+			}
+		}
+
+		if originalFileName != currentFileName {
+			if err := os.Rename(filepath.Join(".", originalFileName), filepath.Join(".", currentFileName)); err != nil {
+				log.Printf("Error renaming file '%s' to '%s': %v", originalFileName, currentFileName, err)
+			}
+		}
+
+		var noteEntry database.Entry
+		// NOTE: i am not validating the year
+		matches := fileNameRe.FindStringSubmatch(currentFileName)
+		year, err := strconv.Atoi(matches[2])
+		if err != nil {
+			log.Printf("Error extracting the year from file '%s': %v", currentFileName, err)
 		} else {
-			fmt.Printf("'%s' is not a valid file name\n", file.Name())
+			noteEntry.Year = year
 		}
-		if err := checkFormat(file.Name()); err != nil {
-			log.Printf("Error on checkFormat(%s) : %v", file.Name(), err)
+
+		if err := checkFormat(currentFileName); err != nil {
+			log.Printf("Error on checkFormat(%s) : %v", currentFileName, err)
 		}
+
 	}
 	// loop trough the list and call checkFormat
 	// once the correct format, call saveNote
 	// once the note has been saved, erase the file from the directory
 	// go to the next file on the list
 
+	return nil
 }
 
 func checkFormat(nameFile string) error {

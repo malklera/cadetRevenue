@@ -1,5 +1,7 @@
 package main
 
+import "cadetRevenue/internal"
+
 func main() {
-	menu()
+	internal.Menu()
 }
