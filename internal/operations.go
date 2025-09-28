@@ -41,8 +41,6 @@ func ProcessNotes() error {
 		return nil
 	}
 
-	var reader = bufio.NewReader(os.Stdin)
-
 	for _, file := range textFiles {
 		originalFileName := file.Name()
 		currentFileName := originalFileName
@@ -58,19 +56,18 @@ func ProcessNotes() error {
 				fmt.Println("Where 'year' is a number from 0000 to 9999")
 				fmt.Printf("> ")
 
-				input, err := reader.ReadString('\n')
-				if err != nil {
-					fmt.Printf("Error reading input: %v", err)
+				input := ""
+				if scanner.Scan() {
+					input = scanner.Text()
+				}
+				input = strings.TrimSpace(input)
+				newPath := filepath.Join(".", input)
+				if _, err := os.Stat(newPath); err == nil {
+					fmt.Printf("File name '%s' already exist, input a different one", input)
+				} else if !errors.Is(err, fs.ErrNotExist) {
+					fmt.Printf("Error checking if file '%s' exist: %v", input, err)
 				} else {
-					input = strings.TrimSpace(input)
-					newPath := filepath.Join(".", input)
-					if _, err := os.Stat(newPath); err == nil {
-						fmt.Printf("File name '%s' already exist, input a different one", input)
-					} else if !errors.Is(err, fs.ErrNotExist) {
-						fmt.Printf("Error checking if file '%s' exist: %v", input, err)
-					} else {
-						currentFileName = input
-					}
+					currentFileName = input
 				}
 			}
 		}
@@ -81,6 +78,7 @@ func ProcessNotes() error {
 			}
 		}
 
+		// NOTE: do i want to get the year here, or do i do it on saveNote?
 		var noteEntry database.Entry
 		// NOTE: i am not validating the year
 		matches := fileNameRe.FindStringSubmatch(currentFileName)
@@ -111,6 +109,13 @@ func checkFormat(nameFile string) error {
 	}
 
 	content := strings.Split(string(data), "\n")
+
+	if !canonRe.MatchString(content[0]) {
+		// TODO: here i will use promt package to modify the ones that are wrong
+	}
+	// for line := range content {
+	//
+	// }
 
 	return nil
 }
