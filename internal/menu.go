@@ -1,3 +1,4 @@
+// Package internal contains all functions used by the application
 package internal
 
 import (
@@ -24,11 +25,20 @@ func Menu() {
 
 		switch opt {
 		case "1":
-			// TODO: process notes takes care of everything?
-			if err := ProcessNotes(); err != nil {
-				log.Printf("%v\n", err)
+			if err := checkFileNames(); err != nil {
+				if err == errNoFiles {
+					fmt.Println("There are no notes to process")
+				} else {
+					log.Printf("error checking the format of the file names: %v\n", err)
+				}
+			} else {
+				listNotes, err := listFiles()
+				if err != nil {
+					log.Printf("error listing files: %v", err)
+				} else {
+					// call checkFormatNote()
+				}
 			}
-			fmt.Println("checking the format of the notes on the directory the command is run from")
 			fmt.Println("process the note, add the results to a db")
 			fmt.Println("move the note with the correct format to 'originals' directory")
 		case "2":

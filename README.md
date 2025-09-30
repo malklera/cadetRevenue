@@ -80,10 +80,11 @@ Row: id, year int, month int, day int, canon int, income int, expenses int
 
 ### menu()
 
-1) ProcessNotes()
-
-- List all files on current directory
-- Put .txt files on textFiles slice
-- Loop through the textFiles and check the format of the name
-    - Correct format: get the year from the fileName
-    - Incorrect format: prompt the user to change the file name
+- Ask the user the following options
+    - Process Notes
+        - checkFileNames() check all .txt files on current directory so it have
+        the correct format, ask the user to correct when it do not, return error
+        - If error != nil and error != errNoFiles, call listFiles(), return a list of txt files names
+        - loop throught the listNotes and on each call checkFormatNote("fileName") return error
+    - Show Notes
+    - Exit
