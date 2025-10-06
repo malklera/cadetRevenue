@@ -22,47 +22,54 @@ func Menu() {
 		if scanner.Scan() {
 			opt = scanner.Text()
 		}
-
-		switch opt {
-		case "1":
-			if err := checkFileNames(); err != nil {
-				if err == errNoFiles {
-					fmt.Println("There are no notes to process")
+		if err := scanner.Err(); err != nil {
+			log.Printf("error reading input: %v", err)
+		} else {
+			switch opt {
+			case "1":
+				if err := checkFileNames(); err != nil {
+					if err == errNoFiles {
+						fmt.Println("There are no notes to process")
+					} else {
+						log.Printf("error checking the format of the file names: %v\n", err)
+					}
 				} else {
-					log.Printf("error checking the format of the file names: %v\n", err)
+					listNotes, err := listFiles()
+					if err != nil {
+						log.Printf("error listing files: %v", err)
+					} else {
+						for _, note := range listNotes {
+							if err := checkFormatNote(note); err != nil {
+								log.Printf("error checking the format of '%s' : %v", note, err)
+							}
+						}
+					}
 				}
-			} else {
-				listNotes, err := listFiles()
-				if err != nil {
-					log.Printf("error listing files: %v", err)
-				} else {
-					// call checkFormatNote()
-				}
-			}
-			fmt.Println("process the note, add the results to a db")
-			fmt.Println("move the note with the correct format to 'originals' directory")
-		case "2":
-			fmt.Println("call showMenu()")
-		case "3":
-			innerFor := true
-			for innerFor {
-				fmt.Println("Confirm exit? (y/n)")
-				fmt.Print("> ")
+				fmt.Println("process the note, add the results to a db")
+				fmt.Println("move the note with the correct format to 'originals' directory")
+			case "2":
+				fmt.Println("call showMenu()")
+			case "3":
+				innerFor := true
+				for innerFor {
+					fmt.Println("Confirm exit? (y/n)")
+					fmt.Print("> ")
 
-				if scanner.Scan() {
-					opt = scanner.Text()
+					if scanner.Scan() {
+						opt = scanner.Text()
+					}
+					switch opt {
+					case "y", "Y":
+						os.Exit(0)
+					case "n", "N":
+						innerFor = false
+					default:
+						fmt.Printf("'%s' is an invalid option.\n", opt)
+					}
 				}
-				switch opt {
-				case "y", "Y":
-					os.Exit(0)
-				case "n", "N":
-					innerFor = false
-				default:
-					fmt.Printf("'%s' is an invalid option.\n", opt)
-				}
+			default:
+				fmt.Printf("'%s' is an invalid option.\n", opt)
 			}
-		default:
-			fmt.Printf("'%s' is an invalid option.\n", opt)
 		}
 	}
 }

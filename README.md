@@ -16,16 +16,18 @@ Where year is the four digit numerical representation, month is the word on engl
 
 First line: Canon<space>int
 
-Subsecuent lines: Entry
-Entry: 
-Day<space>Date:Procedings
-Or
-Day<space>Date
-M: Movements
-Or
-Day<space>Date
-M: Movements
-T: Movements
+After first line: Entry
+    Entry: 
+        Day<space>Date:Procedings
+        Or
+        Day<space>Date
+After Day<space>Date:Procedings: Entry
+After Day<space>Date: Turn
+    Turn:
+        M: Movements
+        Or
+        M: Movements
+        T: Movements
 Followed by either another entry or end of file
 
 Where Day can be:
@@ -88,3 +90,204 @@ Row: id, year int, month int, day int, canon int, income int, expenses int
         - loop throught the listNotes and on each call checkFormatNote("fileName") return error
     - Show Notes
     - Exit
+
+## Test cases
+
+This should be all valid
+```
+
+Canon 7000
+Lunes 29/9:-4000
+Martes 30/9: 0
+Miércoles 1/10
+M:2000
+T:2000+2000
+Jueves 2/10
+M:-4500
+T:-4000
+Viernes 3/10
+M:2500+2200+2500+6000+2000+4000+4000+2000-14800
+T:2000+5000+2000+2000+2000+3000+2500-3300
+Sábado 4/10
+M:2000+2500+4500+4500+4000-2000
+
+```
+
+Error first line has to be Canon int
+```
+
+Lunes 29/9:-4000
+Martes 30/9: 0
+Miércoles 1/10
+M:2000
+T:2000+2000
+Jueves 2/10
+M:-4500
+T:-4000
+Viernes 3/10
+M:2500+2200+2500+6000+2000+4000+4000+2000-14800
+T:2000+5000+2000+2000+2000+3000+2500-3300
+Sábado 4/10
+M:2000+2500+4500+4500+4000-2000
+
+```
+
+Error on Lunes
+```
+
+Canon 7000
+Lunes 29/9:
+Martes 30/9: 0
+Miércoles 1/10
+M:2000
+T:2000+2000
+Jueves 2/10
+M:-4500
+T:-4000
+Viernes 3/10
+M:2500+2200+2500+6000+2000+4000+4000+2000-14800
+T:2000+5000+2000+2000+2000+3000+2500-3300
+Sábado 4/10
+M:2000+2500+4500+4500+4000-2000
+
+```
+
+
+```
+
+Canon 7000
+Lunes 29/9:-4000
+Martes 30/9: 0
+Miércoles 1/10
+M:2000
+T:2000+2000
+Jueves 2/10
+M:-4500
+T:-4000
+Viernes 3/10
+M:2500+2200+2500+6000+2000+4000+4000+2000-14800
+T:2000+5000+2000+2000+2000+3000+2500-3300
+Sábado 4/10
+M:2000+2500+4500+4500+4000-2000
+
+```
+
+
+```
+
+Canon 7000
+Lunes 29/9:-4000
+Martes 30/9: 0
+Miércoles 1/10
+M:2000
+T:2000+2000
+Jueves 2/10
+M:-4500
+T:-4000
+Viernes 3/10
+M:2500+2200+2500+6000+2000+4000+4000+2000-14800
+T:2000+5000+2000+2000+2000+3000+2500-3300
+Sábado 4/10
+M:2000+2500+4500+4500+4000-2000
+
+```
+
+
+```
+
+Canon 7000
+Lunes 29/9:-4000
+Martes 30/9: 0
+Miércoles 1/10
+M:2000
+T:2000+2000
+Jueves 2/10
+M:-4500
+T:-4000
+Viernes 3/10
+M:2500+2200+2500+6000+2000+4000+4000+2000-14800
+T:2000+5000+2000+2000+2000+3000+2500-3300
+Sábado 4/10
+M:2000+2500+4500+4500+4000-2000
+
+```
+
+
+```
+
+Canon 7000
+Lunes 29/9:-4000
+Martes 30/9: 0
+Miércoles 1/10
+M:2000
+T:2000+2000
+Jueves 2/10
+M:-4500
+T:-4000
+Viernes 3/10
+M:2500+2200+2500+6000+2000+4000+4000+2000-14800
+T:2000+5000+2000+2000+2000+3000+2500-3300
+Sábado 4/10
+M:2000+2500+4500+4500+4000-2000
+
+```
+
+
+```
+
+Canon 7000
+Lunes 29/9:-4000
+Martes 30/9: 0
+Miércoles 1/10
+M:2000
+T:2000+2000
+Jueves 2/10
+M:-4500
+T:-4000
+Viernes 3/10
+M:2500+2200+2500+6000+2000+4000+4000+2000-14800
+T:2000+5000+2000+2000+2000+3000+2500-3300
+Sábado 4/10
+M:2000+2500+4500+4500+4000-2000
+
+```
+
+
+```
+
+Canon 7000
+Lunes 29/9:-4000
+Martes 30/9: 0
+Miércoles 1/10
+M:2000
+T:2000+2000
+Jueves 2/10
+M:-4500
+T:-4000
+Viernes 3/10
+M:2500+2200+2500+6000+2000+4000+4000+2000-14800
+T:2000+5000+2000+2000+2000+3000+2500-3300
+Sábado 4/10
+M:2000+2500+4500+4500+4000-2000
+
+```
+
+
+```
+
+Canon 7000
+Lunes 29/9:-4000
+Martes 30/9: 0
+Miércoles 1/10
+M:2000
+T:2000+2000
+Jueves 2/10
+M:-4500
+T:-4000
+Viernes 3/10
+M:2500+2200+2500+6000+2000+4000+4000+2000-14800
+T:2000+5000+2000+2000+2000+3000+2500-3300
+Sábado 4/10
+M:2000+2500+4500+4500+4000-2000
+
+```

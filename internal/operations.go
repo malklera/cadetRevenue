@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"cadetRevenue/internal/database"
 	"errors"
 	"fmt"
 	"github.com/malklera/sliner/pkg/liner"
@@ -10,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 )
 
@@ -92,6 +90,7 @@ func checkFileNames() error {
 	return nil
 }
 
+// return a slice of file.Name().
 // Important to only call this after checkFileNames()
 func listFiles() ([]string, error) {
 	allFiles, err := os.ReadDir(".")
@@ -114,6 +113,8 @@ func listFiles() ([]string, error) {
 	return textFiles, nil
 }
 
+// accept the name of a file, allow to modify, return nil if all operations were
+// execute correctly
 func checkFormatNote(nameNote string) error {
 	data, err := os.ReadFile(nameNote)
 	if err != nil {
@@ -121,11 +122,71 @@ func checkFormatNote(nameNote string) error {
 	}
 
 	content := strings.Split(string(data), "\n")
+	var newContent []string
 
 	if !canonRe.MatchString(content[0]) {
-		// TODO: here i will use promt package to modify the ones that are wrong
-	}
+		// TODO: here i will use liner package to modify the ones that are wrong
+		// how do i add a line?
+		// either i have something wrong, or i have nothing and the first line is "valid"
+		for {
+			fmt.Println("Current first line:")
+			fmt.Println(content[0])
+			fmt.Println("Choose operation")
+			fmt.Println("1- Add line above")
+			fmt.Println("2- Edit line")
+			fmt.Print("> ")
 
+			opt := ""
+			if scanner.Scan() {
+				opt = scanner.Text()
+			}
+			if err := scanner.Err(); err != nil {
+				log.Printf("error reading input: %v", err)
+			} else {
+				switch opt {
+				case "1":
+					// NOTE: How is the user suppose to know what the canon should be?
+					for {
+						fmt.Println("New line:")
+						fmt.Print("> ")
+						line := ""
+						if scanner.Scan() {
+							line = scanner.Text()
+						}
+						if err := scanner.Err(); err != nil {
+							log.Printf("error reading input: %v", err)
+						} else {
+							if canonRe.MatchString(line) {
+								newContent = append(newContent, line)
+								break
+							} else {
+								fmt.Printf("'%s' is an invalid line\n", line)
+							}
+						}
+					}
+				case "2":
+						line := liner.NewLiner()
+						defer line.Close()
+					for {
+						input, err := line.PrefilledInput(content[0], -1)
+						if err != nil {
+							log.Printf("error on input: %v", err)
+						} else {
+							if canonRe.MatchString(input) {
+								newContent = append(newContent, input)
+								break
+							} else {
+								fmt.Printf("'%s' is an invalid line\n", input)
+							}
+						}
+					}
+				default:
+					fmt.Printf("'%s' is an invalid option.\n", opt)
+				}
+			}
+		}
+
+	}
 	return nil
 }
 
