@@ -1,6 +1,8 @@
+// Package internal has all functions used to interact with the program
 package internal
 
 import (
+	// "cadetRevenue/internal/database"
 	"errors"
 	"fmt"
 	"github.com/malklera/sliner/pkg/liner"
@@ -90,8 +92,8 @@ func checkFileNames() error {
 	return nil
 }
 
-// return a slice of file.Name().
-// Important to only call this after checkFileNames()
+// return a slice of [file.Name()].
+// Important to only call this after [checkFileNames()]
 func listFiles() ([]string, error) {
 	allFiles, err := os.ReadDir(".")
 	if err != nil {
@@ -124,7 +126,9 @@ func checkFormatNote(nameNote string) error {
 	content := strings.Split(string(data), "\n")
 	var newContent []string
 
-	if !canonRe.MatchString(content[0]) {
+	if canonRe.MatchString(content[0]) {
+		newContent = append(newContent, content[0])
+	} else {
 		// TODO: here i will use liner package to modify the ones that are wrong
 		// how do i add a line?
 		// either i have something wrong, or i have nothing and the first line is "valid"
@@ -135,27 +139,22 @@ func checkFormatNote(nameNote string) error {
 			fmt.Println("1- Add line above")
 			fmt.Println("2- Edit line")
 			fmt.Print("> ")
-
-			opt := ""
-			if scanner.Scan() {
-				opt = scanner.Text()
-			}
-			if err := scanner.Err(); err != nil {
+			opt, err := reader.ReadString('\n')
+			if err != nil {
 				log.Printf("error reading input: %v", err)
 			} else {
+				opt = strings.TrimSpace(opt)
 				switch opt {
 				case "1":
 					// NOTE: How is the user suppose to know what the canon should be?
 					for {
 						fmt.Println("New line:")
 						fmt.Print("> ")
-						line := ""
-						if scanner.Scan() {
-							line = scanner.Text()
-						}
-						if err := scanner.Err(); err != nil {
+						line, err := reader.ReadString('\n')
+						if err != nil {
 							log.Printf("error reading input: %v", err)
 						} else {
+							line = strings.TrimSpace(line)
 							if canonRe.MatchString(line) {
 								newContent = append(newContent, line)
 								break
@@ -165,8 +164,8 @@ func checkFormatNote(nameNote string) error {
 						}
 					}
 				case "2":
-						line := liner.NewLiner()
-						defer line.Close()
+					line := liner.NewLiner()
+					defer line.Close()
 					for {
 						input, err := line.PrefilledInput(content[0], -1)
 						if err != nil {
@@ -187,9 +186,59 @@ func checkFormatNote(nameNote string) error {
 		}
 
 	}
+
+	for n := range content[1:] {
+		switch {
+		case canonRe.MatchString(content[n]):
+			newContent = append(newContent, content[n])
+		case dayNoWorkRe.MatchString(content[n]):
+			// check the next content[n] is dayWorkRe or end of file
+			newContent = append(newContent, content[n])
+			switch {
+			case n >= len(content):
+				continue
+			case canonRe.MatchString(content[n+1]):
+				continue
+			case dayNoWorkRe.MatchString(content[n+1]):
+				continue
+			case dayWorkRe.MatchString(content[n+1]):
+				continue
+			default:
+				// error, the next line is invalid
+				for {
+					fmt.Println("Current line:")
+					fmt.Println(content[n])
+					fmt.Println("The line below is invalid")
+					fmt.Println(content[n+1])
+					fmt.Println("Choose what to do")
+					fmt.Println("1- Erase line")
+					fmt.Println("2- Leave it(will be prompted to modify it later)")
+					fmt.Print("> ")
+					opt, err := reader.ReadString('\n')
+					if err != nil {
+						log.Printf("error reading input: %v", err)
+					} else {
+						opt = strings.TrimSpace(opt)
+						switch opt {
+						case "1":
+							// how do i erase the next line??
+						case "2":
+							continue
+						default:
+							fmt.Printf("'%s' is an invalid option.\n", opt)
+						}
+					}
+				}
+			}
+		case dayWorkRe.MatchString(content[n]):
+			// check next content[n] is procedings
+			newContent = append(newContent, content[n])
+		case procedingsRe.MatchString(content[n]):
+			// check next content[n] is procedings, canon, dayNoWork, or dayWork
+			newContent = append(newContent, content[n])
+		default:
+			// do something about non valid lines
+		}
+	}
 	return nil
-}
-
-func saveNote() {
-
 }

@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 )
 
-var scanner = bufio.NewScanner(os.Stdin)
+var reader = bufio.NewReader(os.Stdin)
 
 func Menu() {
 	for {
@@ -18,13 +19,11 @@ func Menu() {
 		fmt.Println("3- Exit")
 		fmt.Print("> ")
 
-		opt := ""
-		if scanner.Scan() {
-			opt = scanner.Text()
-		}
-		if err := scanner.Err(); err != nil {
+		opt, err := reader.ReadString('\n')
+		if err != nil {
 			log.Printf("error reading input: %v", err)
 		} else {
+			opt = strings.TrimSpace(opt)
 			switch opt {
 			case "1":
 				if err := checkFileNames(); err != nil {
@@ -54,17 +53,19 @@ func Menu() {
 				for innerFor {
 					fmt.Println("Confirm exit? (y/n)")
 					fmt.Print("> ")
-
-					if scanner.Scan() {
-						opt = scanner.Text()
-					}
-					switch opt {
-					case "y", "Y":
-						os.Exit(0)
-					case "n", "N":
-						innerFor = false
-					default:
-						fmt.Printf("'%s' is an invalid option.\n", opt)
+					opt, err := reader.ReadString('\n')
+					if err != nil {
+						log.Printf("error reading input: %v", err)
+					} else {
+						opt = strings.TrimSpace(opt)
+						switch opt {
+						case "y", "Y":
+							os.Exit(0)
+						case "n", "N":
+							innerFor = false
+						default:
+							fmt.Printf("'%s' is an invalid option.\n", opt)
+						}
 					}
 				}
 			default:

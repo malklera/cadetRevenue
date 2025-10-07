@@ -1,3 +1,4 @@
+// Package database contains the struct and functions to interact with the database
 package database
 
 import (
@@ -10,6 +11,7 @@ type Entry struct {
 	Month    int
 	Day      int
 	Canon    int
-	Income   int
+	IncomeM   int
+	IncomeT   int
 	Expenses int
 }
