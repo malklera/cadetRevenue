@@ -295,15 +295,13 @@ M:2000+2500+4500+4500+4000-2000
 
 ```
 
-Error on
+No really treated as an Error below Miercoles, but it just has to add procedings 0
 ```
 
 Canon 7000
 Lunes 29/9:-4000
 Martes 30/9: 0
 Miércoles 1/10
-M:2000
-T:2000+2000
 Jueves 2/10
 M:-4500
 T:-4000

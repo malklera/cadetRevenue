@@ -187,15 +187,18 @@ func checkFormatNote(nameNote string) error {
 
 	}
 
-	for n := range content[1:] {
+	// check each line after the first, for non-valid ones allow user to erase or modify
+	for n := 1; n < len(content); n++ {
 		switch {
 		case canonRe.MatchString(content[n]):
 			newContent = append(newContent, content[n])
 		case dayNoWorkRe.MatchString(content[n]):
-			// check the next content[n] is dayWorkRe or end of file
-			newContent = append(newContent, content[n])
+			day := strings.Split(content[n], ":")
+			newContent = append(newContent, day[0])
+			newContent = append(newContent, "M:"+day[1])
+			newContent = append(newContent, "T:0")
 			switch {
-			case n >= len(content):
+			case n+1 == len(content):
 				continue
 			case canonRe.MatchString(content[n+1]):
 				continue
@@ -205,7 +208,8 @@ func checkFormatNote(nameNote string) error {
 				continue
 			default:
 				// error, the next line is invalid
-				for {
+				proceed := true
+				for proceed {
 					fmt.Println("Current line:")
 					fmt.Println(content[n])
 					fmt.Println("The line below is invalid")
@@ -221,9 +225,11 @@ func checkFormatNote(nameNote string) error {
 						opt = strings.TrimSpace(opt)
 						switch opt {
 						case "1":
-							// how do i erase the next line??
+							// Advance the counter, jump over the next line
+							n++
+							proceed = false
 						case "2":
-							continue
+							proceed = false
 						default:
 							fmt.Printf("'%s' is an invalid option.\n", opt)
 						}
@@ -231,14 +237,112 @@ func checkFormatNote(nameNote string) error {
 				}
 			}
 		case dayWorkRe.MatchString(content[n]):
-			// check next content[n] is procedings
 			newContent = append(newContent, content[n])
+			switch {
+			case procedingsRe.MatchString(content[n+1]):
+				continue
+			default:
+				newContent = append(newContent, "M:0")
+				newContent = append(newContent, "T:0")
+			}
 		case procedingsRe.MatchString(content[n]):
 			// check next content[n] is procedings, canon, dayNoWork, or dayWork
 			newContent = append(newContent, content[n])
+			switch {
+			case n+1 == len(content):
+				continue
+			case canonRe.MatchString(content[n+1]):
+				continue
+			case dayNoWorkRe.MatchString(content[n+1]):
+				continue
+			case dayWorkRe.MatchString(content[n+1]):
+				continue
+			default:
+				// error, the next line is invalid
+				proceed := true
+				for proceed {
+					fmt.Println("Current line:")
+					fmt.Println(content[n])
+					fmt.Println("The line below is invalid")
+					fmt.Println(content[n+1])
+					fmt.Println("Choose what to do")
+					fmt.Println("1- Erase line")
+					fmt.Println("2- Leave it(will be prompted to modify it later)")
+					fmt.Print("> ")
+					opt, err := reader.ReadString('\n')
+					if err != nil {
+						log.Printf("error reading input: %v", err)
+					} else {
+						opt = strings.TrimSpace(opt)
+						switch opt {
+						case "1":
+							// Advance the counter, jump over the next line
+							n++
+							proceed = false
+						case "2":
+							proceed = false
+						default:
+							fmt.Printf("'%s' is an invalid option.\n", opt)
+						}
+					}
+				}
+			}
 		default:
 			// do something about non valid lines
+			proceed := true
+			for proceed {
+				fmt.Println("Current line:")
+				fmt.Println(content[n])
+				fmt.Println("The line is invalid")
+				fmt.Println("Choose what to do")
+				fmt.Println("1- Erase line")
+				fmt.Println("2- Modify")
+				fmt.Print("> ")
+				opt, err := reader.ReadString('\n')
+				if err != nil {
+					log.Printf("error reading input: %v", err)
+				} else {
+					opt = strings.TrimSpace(opt)
+					switch opt {
+					case "1":
+						// Advance the counter, jump over the next line
+						n++
+						proceed = false
+					case "2":
+						// call liner, allow the user to modify it, then check that is valid
+						line := liner.NewLiner()
+						defer line.Close()
+						for {
+							fmt.Println("Modify the line and press Enter")
+							input, err := line.PrefilledInput(content[n], -1)
+							if err != nil {
+								log.Printf("error on input: %v", err)
+							} else if validLine(input) {
+								newContent = append(newContent, input)
+								break
+							} else {
+								fmt.Printf("'%s'\n is not a valid line", input)
+							}
+						}
+						proceed = false
+					default:
+						fmt.Printf("'%s' is an invalid option.\n", opt)
+					}
+				}
+			}
 		}
 	}
+	// i have newContent with everithing i want, now what?
 	return nil
+}
+
+// Evaluate if the given line conform to any of the declared regexs
+func validLine(line string) bool {
+	switch {
+	case canonRe.MatchString(line), dayNoWorkRe.MatchString(line),
+		dayWorkRe.MatchString(line), procedingsRe.MatchString(line):
+		return true
+	default:
+		return false
+	}
 }
