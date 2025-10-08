@@ -59,20 +59,20 @@ func checkFileNames() error {
 				} else {
 					fmt.Printf("'%s' is not a valid file name\n", currentFileName)
 					fmt.Println("The correct format is: month-int-year.txt")
-					fmt.Println("Where 'month' is a valid month written in spanish word")
+					fmt.Println("Where 'month' is a valid month written in Spanish word")
 					fmt.Println("Where 'int' is a number from 0 to 9")
 					fmt.Println("Where 'year' is a number from 0000 to 9999")
 					fmt.Printf("> ")
 
 					input, err := line.PrefilledInput(currentFileName, -1)
 					if err != nil {
-						log.Printf("error on input: %v", err)
+						log.Printf("error on input: %v\n", err)
 					} else {
 						newPath := filepath.Join(".", input)
 						if _, err := os.Stat(newPath); err == nil {
-							fmt.Printf("File name '%s' already exist, input a different one", input)
+							fmt.Printf("File name '%s' already exist, input a different one\n", input)
 						} else if !errors.Is(err, fs.ErrNotExist) {
-							log.Printf("error checking if file '%s' exist: %v", input, err)
+							log.Printf("error checking if file '%s' exist: %v\n", input, err)
 						} else {
 							currentFileName = input
 						}
@@ -84,7 +84,7 @@ func checkFileNames() error {
 				renameFor = false
 			} else {
 				if err := os.Rename(filepath.Join(".", originalFileName), filepath.Join(".", currentFileName)); err != nil {
-					log.Printf("error renaming file '%s' to '%s': %v", originalFileName, currentFileName, err)
+					log.Printf("error renaming file '%s' to '%s': %v\n", originalFileName, currentFileName, err)
 				}
 			}
 		}
@@ -141,7 +141,7 @@ func checkFormatNote(nameNote string) error {
 			fmt.Print("> ")
 			opt, err := reader.ReadString('\n')
 			if err != nil {
-				log.Printf("error reading input: %v", err)
+				log.Printf("error reading input: %v\n", err)
 			} else {
 				opt = strings.TrimSpace(opt)
 				switch opt {
@@ -152,7 +152,7 @@ func checkFormatNote(nameNote string) error {
 						fmt.Print("> ")
 						line, err := reader.ReadString('\n')
 						if err != nil {
-							log.Printf("error reading input: %v", err)
+							log.Printf("error reading input: %v\n", err)
 						} else {
 							line = strings.TrimSpace(line)
 							if canonRe.MatchString(line) {
@@ -169,7 +169,7 @@ func checkFormatNote(nameNote string) error {
 					for {
 						input, err := line.PrefilledInput(content[0], -1)
 						if err != nil {
-							log.Printf("error on input: %v", err)
+							log.Printf("error on input: %v\n", err)
 						} else {
 							if canonRe.MatchString(input) {
 								newContent += input + "\n"
@@ -184,7 +184,6 @@ func checkFormatNote(nameNote string) error {
 				}
 			}
 		}
-
 	}
 
 	// check each line after the first, for non-valid ones allow user to erase or modify
@@ -199,7 +198,7 @@ func checkFormatNote(nameNote string) error {
 			newContent += "T:0" + "\n"
 			switch {
 			case n+1 == len(content):
-				continue
+				newContent, _ = strings.CutSuffix(newContent, "\n")
 			case canonRe.MatchString(content[n+1]):
 				continue
 			case dayNoWorkRe.MatchString(content[n+1]):
@@ -220,7 +219,7 @@ func checkFormatNote(nameNote string) error {
 					fmt.Print("> ")
 					opt, err := reader.ReadString('\n')
 					if err != nil {
-						log.Printf("error reading input: %v", err)
+						log.Printf("error reading input: %v\n", err)
 					} else {
 						opt = strings.TrimSpace(opt)
 						switch opt {
@@ -246,11 +245,10 @@ func checkFormatNote(nameNote string) error {
 				newContent += "T:0" + "\n"
 			}
 		case procedingsRe.MatchString(content[n]):
-			// check next content[n] is procedings, canon, dayNoWork, or dayWork
 			newContent += content[n] + "\n"
 			switch {
 			case n+1 == len(content):
-				continue
+				newContent, _ = strings.CutSuffix(newContent, "\n")
 			case canonRe.MatchString(content[n+1]):
 				continue
 			case dayNoWorkRe.MatchString(content[n+1]):
@@ -271,7 +269,7 @@ func checkFormatNote(nameNote string) error {
 					fmt.Print("> ")
 					opt, err := reader.ReadString('\n')
 					if err != nil {
-						log.Printf("error reading input: %v", err)
+						log.Printf("error reading input: %v\n", err)
 					} else {
 						opt = strings.TrimSpace(opt)
 						switch opt {
@@ -288,7 +286,7 @@ func checkFormatNote(nameNote string) error {
 				}
 			}
 		default:
-			// do something about non valid lines
+			// Non valid line
 			proceed := true
 			for proceed {
 				fmt.Println("Current line:")
@@ -300,7 +298,7 @@ func checkFormatNote(nameNote string) error {
 				fmt.Print("> ")
 				opt, err := reader.ReadString('\n')
 				if err != nil {
-					log.Printf("error reading input: %v", err)
+					log.Printf("error reading input: %v\n", err)
 				} else {
 					opt = strings.TrimSpace(opt)
 					switch opt {
@@ -309,19 +307,18 @@ func checkFormatNote(nameNote string) error {
 						n++
 						proceed = false
 					case "2":
-						// call liner, allow the user to modify it, then check that is valid
 						line := liner.NewLiner()
 						defer line.Close()
 						for {
 							fmt.Println("Modify the line and press Enter")
 							input, err := line.PrefilledInput(content[n], -1)
 							if err != nil {
-								log.Printf("error on input: %v", err)
+								log.Printf("error on input: %v\n", err)
 							} else if validLine(input) {
 								newContent += input + "\n"
 								break
 							} else {
-								fmt.Printf("'%s'\n is not a valid line", input)
+								fmt.Printf("'%s'\n is not a valid line\n", input)
 							}
 						}
 						proceed = false
@@ -332,11 +329,39 @@ func checkFormatNote(nameNote string) error {
 			}
 		}
 	}
-	// i have newContent with everithing i want, now what?
+	// Was the note modified?
+	if string(data) != newContent {
+		retry := true
+		for retry {
+			if err := os.WriteFile(nameNote, []byte(newContent), 0666); err != nil {
+				log.Printf("error saving the note: %v\n", err)
+				fmt.Println("Do you want to retry? (y/n)")
+				fmt.Print("> ")
+				opt, err := reader.ReadString('\n')
+				if err != nil {
+					log.Printf("error reading input: %v\n", err)
+				} else {
+					opt = strings.TrimSpace(opt)
+					switch opt {
+					case "y", "Y":
+						continue
+					case "n", "N":
+						fmt.Println("The modifications were not saved")
+						retry = false
+					default:
+						fmt.Printf("'%s' is an invalid option.\n", opt)
+					}
+				}
+			} else {
+				fmt.Println("Modifications successfully saved")
+				retry = false
+			}
+		}
+	}
 	return nil
 }
 
-// Evaluate if the given line conform to any of the declared regexs
+// Evaluate if the given line conform to any of the declared regex's
 func validLine(line string) bool {
 	switch {
 	case canonRe.MatchString(line), dayNoWorkRe.MatchString(line),

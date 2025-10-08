@@ -21,7 +21,7 @@ func Menu() {
 
 		opt, err := reader.ReadString('\n')
 		if err != nil {
-			log.Printf("error reading input: %v", err)
+			log.Printf("error reading input: %v\n", err)
 		} else {
 			opt = strings.TrimSpace(opt)
 			switch opt {
@@ -35,11 +35,11 @@ func Menu() {
 				} else {
 					listNotes, err := listFiles()
 					if err != nil {
-						log.Printf("error listing files: %v", err)
+						log.Printf("error listing files: %v\n", err)
 					} else {
 						for _, note := range listNotes {
 							if err := checkFormatNote(note); err != nil {
-								log.Printf("error checking the format of '%s' : %v", note, err)
+								log.Printf("error checking the format of '%s' : %v\n", note, err)
 							}
 						}
 					}
@@ -55,7 +55,7 @@ func Menu() {
 					fmt.Print("> ")
 					opt, err := reader.ReadString('\n')
 					if err != nil {
-						log.Printf("error reading input: %v", err)
+						log.Printf("error reading input: %v\n", err)
 					} else {
 						opt = strings.TrimSpace(opt)
 						switch opt {
