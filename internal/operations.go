@@ -124,10 +124,10 @@ func checkFormatNote(nameNote string) error {
 	}
 
 	content := strings.Split(string(data), "\n")
-	var newContent []string
+	newContent := ""
 
 	if canonRe.MatchString(content[0]) {
-		newContent = append(newContent, content[0])
+		newContent += content[0] + "\n"
 	} else {
 		// TODO: here i will use liner package to modify the ones that are wrong
 		// how do i add a line?
@@ -156,7 +156,7 @@ func checkFormatNote(nameNote string) error {
 						} else {
 							line = strings.TrimSpace(line)
 							if canonRe.MatchString(line) {
-								newContent = append(newContent, line)
+								newContent += line + "\n"
 								break
 							} else {
 								fmt.Printf("'%s' is an invalid line\n", line)
@@ -172,7 +172,7 @@ func checkFormatNote(nameNote string) error {
 							log.Printf("error on input: %v", err)
 						} else {
 							if canonRe.MatchString(input) {
-								newContent = append(newContent, input)
+								newContent += input + "\n"
 								break
 							} else {
 								fmt.Printf("'%s' is an invalid line\n", input)
@@ -191,12 +191,12 @@ func checkFormatNote(nameNote string) error {
 	for n := 1; n < len(content); n++ {
 		switch {
 		case canonRe.MatchString(content[n]):
-			newContent = append(newContent, content[n])
+			newContent += content[n] + "\n"
 		case dayNoWorkRe.MatchString(content[n]):
 			day := strings.Split(content[n], ":")
-			newContent = append(newContent, day[0])
-			newContent = append(newContent, "M:"+day[1])
-			newContent = append(newContent, "T:0")
+			newContent += day[0] + "\n"
+			newContent += "M:" + day[1] + "\n"
+			newContent += "T:0" + "\n"
 			switch {
 			case n+1 == len(content):
 				continue
@@ -237,17 +237,17 @@ func checkFormatNote(nameNote string) error {
 				}
 			}
 		case dayWorkRe.MatchString(content[n]):
-			newContent = append(newContent, content[n])
+			newContent += content[n] + "\n"
 			switch {
 			case procedingsRe.MatchString(content[n+1]):
 				continue
 			default:
-				newContent = append(newContent, "M:0")
-				newContent = append(newContent, "T:0")
+				newContent += "M:0" + "\n"
+				newContent += "T:0" + "\n"
 			}
 		case procedingsRe.MatchString(content[n]):
 			// check next content[n] is procedings, canon, dayNoWork, or dayWork
-			newContent = append(newContent, content[n])
+			newContent += content[n] + "\n"
 			switch {
 			case n+1 == len(content):
 				continue
@@ -318,7 +318,7 @@ func checkFormatNote(nameNote string) error {
 							if err != nil {
 								log.Printf("error on input: %v", err)
 							} else if validLine(input) {
-								newContent = append(newContent, input)
+								newContent += input + "\n"
 								break
 							} else {
 								fmt.Printf("'%s'\n is not a valid line", input)
