@@ -93,6 +93,23 @@ Row: id, year int, month int, day int, canon int, income int, expenses int
 
 ## TO DO:
 
+[x] Change checkFileNames() to checkFileName() the actual implementation, i have
+listFiles() so i should call it and loop through the return and call checkFileName()
+on each
+[x] Test checkFileName()
+[x] Make sure a note has content, otherwise the program panic(found out while
+testing checkFileName())
+[x] On checkFormatNote() if I encounter an empty line, erase it without asking the user
+[ ] Test all my test cases for checkFormatNote()
+[ ] Ensure data for a specifyc day is unique, i copied the content of abril-4-2024.txt to abril-5-2024.txt to test
+[ ] Create the DB schema and a initial selection of functions to interface with it,
+create table, input data, get data out?? think about this one more
+[ ] Create a function to extract data from correctly formated notes, and put it
+on the DB
+[ ] Move processed notes to the proceseed/ directory
+[ ] Do some calculations for my notes, like getting a net profict daily
+[ ] Make something for the Show menu, i have to think about what i care about
+[ ] Check all TODO and NOTE on the project and dealt with them
 [ ] If a procedings gets cut by an accidental new line i will have to manually
 modify the file
 ```
@@ -103,7 +120,36 @@ M:2000+3000+
 
 ## Test cases
 
-This should be all valid
+### For checkFileName()
+
+#### Should be valid
+
+- enero-1-2025.txt
+- febrero-2-2023.txt
+- octubre-5-2024.txt
+
+```sh
+touch enero-1-2025.txt febrero-2-2023.txt octubre-5-2024.txt
+```
+
+
+#### Should be invalid
+
+- wrong.txt
+- mayo-3-4-2020.txt
+- diciembre-2018.txt
+- noviembre.txt
+- 2021.txt
+
+```sh
+touch wrong.txt mayo-3-4-2020.txt diciembre-2018.txt noviembre.txt 2021.txt
+```
+
+
+### For checkFormatNote()
+
+#### Should be valid
+
 ```
 
 Canon 7000
@@ -122,6 +168,8 @@ Sábado 4/10
 M: 2000+2500+4500+4500+4000-2000
 
 ```
+
+#### Should be invalid
 
 Error first line has to be Canon int
 ```
@@ -312,26 +360,6 @@ Canon 7000
 Lunes 29/9:-4000
 Martes 30/9: 0
 Miércoles 1/10
-Jueves 2/10
-M:-4500
-T:-4000
-Viernes 3/10
-M:2500+2200+2500+6000+2000+4000+4000+2000-14800
-T:2000+5000+2000+2000+2000+3000+2500-3300
-Sábado 4/10
-M:2000+2500+4500+4500+4000-2000
-
-```
-
-
-```
-
-Canon 7000
-Lunes 29/9:-4000
-Martes 30/9: 0
-Miércoles 1/10
-M:2000
-T:2000+2000
 Jueves 2/10
 M:-4500
 T:-4000

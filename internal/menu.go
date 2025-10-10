@@ -26,23 +26,32 @@ func Menu() {
 			opt = strings.TrimSpace(opt)
 			switch opt {
 			case "1":
-				if err := checkFileNames(); err != nil {
-					if err == errNoFiles {
-						fmt.Println("There are no notes to process")
-					} else {
-						log.Printf("error checking the format of the file names: %v\n", err)
-					}
-				} else {
-					listNotes, err := listFiles()
-					if err != nil {
-						log.Printf("error listing files: %v\n", err)
-					} else {
-						for _, note := range listNotes {
-							if err := checkFormatNote(note); err != nil {
+				listNotes, err := listFiles()
+				switch err {
+				case nil:
+					for n := range listNotes {
+						note, err := checkFileName(listNotes[n])
+						switch err {
+						case nil:
+							err := checkFormatNote(note)
+							switch err {
+							case nil:
+								continue
+							case errSkipNote:
+								fmt.Printf("Formating of '%s' skipped\n", note)
+							default:
 								log.Printf("error checking the format of '%s' : %v\n", note, err)
 							}
+						case errRenameCancel:
+							fmt.Printf("The renaming of '%s' was canceled\n", note)
+						default:
+							log.Printf("error checking the format of '%s' : %v\n", note, err)
 						}
 					}
+				case errNoFiles:
+					fmt.Println("There are no files to process")
+				default:
+					log.Printf("error listing files: %v\n", err)
 				}
 				fmt.Println("process the note, add the results to a db")
 				fmt.Println("move the note with the correct format to 'originals' directory")

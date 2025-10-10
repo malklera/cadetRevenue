@@ -22,78 +22,90 @@ var (
 	procedingsRe = regexp.MustCompile(`^(M|T): *(?:-\d+|\d+(?:\+\d+)*(?:-\d+)?)$`)
 )
 
+// Indicates that there are no .txt files on the current directory
 var errNoFiles = errors.New("there are no files to process")
 
-func checkFileNames() error {
-	allFiles, err := os.ReadDir(".")
-	if err != nil {
-		return fmt.Errorf("error listing files: %w", err)
-	}
+// Indicates that the user canceled the renaming of a file
+var errRenameCancel = errors.New("renaming canceled")
 
-	var textFiles []fs.DirEntry
+// Indicates skiping the formatting of the note
+var errSkipNote = errors.New("skip formatting of note")
 
-	for _, file := range allFiles {
-		if !file.IsDir() && strings.HasSuffix(file.Name(), ".txt") {
-			textFiles = append(textFiles, file)
-		}
-	}
-
-	if len(textFiles) == 0 {
-		return errNoFiles
-	}
-
+// Take the name of a file, check that it is the correct format, if not ask the
+// user for input, return a correctly formated file name
+func checkFileName(file string) (string, error) {
 	line := liner.NewLiner()
 	defer line.Close()
 
-	for _, file := range textFiles {
-		originalFileName := file.Name()
-		renameFor := true
+	currentFileName := ""
+	renameFor := true
 
-		for renameFor {
-			currentFileName := originalFileName
-			for {
-				//check the fileName to be the correct format
-				if fileNameRe.MatchString(currentFileName) {
-					renameFor = false
-					break
+	for renameFor {
+		currentFileName = file
+		for {
+			//check the fileName to be the correct format
+			if fileNameRe.MatchString(currentFileName) {
+				break
+			} else {
+				// NOTE: Should ask the user if it want to rename the file?
+				fmt.Printf("'%s' is not a valid file name\n", currentFileName)
+				fmt.Println("The correct format is: month-int-year.txt")
+				fmt.Println("Where 'month' is a valid month written in Spanish word")
+				fmt.Println("Where 'int' is a number from 0 to 9")
+				fmt.Println("Where 'year' is a number from 0000 to 9999")
+				fmt.Printf("> ")
+
+				input, err := line.PrefilledInput(currentFileName, -1)
+				if err != nil {
+					log.Printf("error on input: %v\n", err)
 				} else {
-					fmt.Printf("'%s' is not a valid file name\n", currentFileName)
-					fmt.Println("The correct format is: month-int-year.txt")
-					fmt.Println("Where 'month' is a valid month written in Spanish word")
-					fmt.Println("Where 'int' is a number from 0 to 9")
-					fmt.Println("Where 'year' is a number from 0000 to 9999")
-					fmt.Printf("> ")
-
-					input, err := line.PrefilledInput(currentFileName, -1)
-					if err != nil {
-						log.Printf("error on input: %v\n", err)
+					newPath := filepath.Join(".", input)
+					if _, err := os.Stat(newPath); err == nil {
+						fmt.Printf("File name '%s' already exist, input a different one\n", input)
+					} else if !errors.Is(err, fs.ErrNotExist) {
+						log.Printf("error checking if file '%s' exist: %v\n", input, err)
 					} else {
-						newPath := filepath.Join(".", input)
-						if _, err := os.Stat(newPath); err == nil {
-							fmt.Printf("File name '%s' already exist, input a different one\n", input)
-						} else if !errors.Is(err, fs.ErrNotExist) {
-							log.Printf("error checking if file '%s' exist: %v\n", input, err)
-						} else {
-							currentFileName = input
-						}
+						currentFileName = input
 					}
 				}
 			}
+		}
 
-			if originalFileName == currentFileName {
-				renameFor = false
-			} else {
-				if err := os.Rename(filepath.Join(".", originalFileName), filepath.Join(".", currentFileName)); err != nil {
-					log.Printf("error renaming file '%s' to '%s': %v\n", originalFileName, currentFileName, err)
+		if file == currentFileName {
+			renameFor = false
+		} else {
+			retry := true
+			for retry {
+				if err := os.Rename(filepath.Join(".", file), filepath.Join(".", currentFileName)); err != nil {
+					log.Printf("error renaming file '%s' to '%s': %v\n", file, currentFileName, err)
+					fmt.Println("Do you want to retry? (y/n)")
+					fmt.Print("> ")
+					opt, err := reader.ReadString('\n')
+					if err != nil {
+						log.Printf("error reading input: %v\n", err)
+					} else {
+						opt = strings.TrimSpace(opt)
+						switch opt {
+						case "y", "Y":
+							continue
+						case "n", "N":
+							return file, errRenameCancel
+						default:
+							fmt.Printf("'%s' is an invalid option.\n", opt)
+						}
+					}
+				} else {
+					fmt.Printf("File '%s' succesfull renamed to '%s'\n", file, currentFileName)
+					retry = false
+					renameFor = false
 				}
 			}
 		}
 	}
-	return nil
+	return currentFileName, nil
 }
 
 // return a slice of [file.Name()].
-// Important to only call this after [checkFileNames()]
 func listFiles() ([]string, error) {
 	allFiles, err := os.ReadDir(".")
 	if err != nil {
@@ -115,19 +127,25 @@ func listFiles() ([]string, error) {
 	return textFiles, nil
 }
 
-// accept the name of a file, allow to modify, return nil if all operations were
-// execute correctly
+// accept the name of a file, allow to modify or cancel the modifycation, return
+// nil if all operations were execute correctly
 func checkFormatNote(nameNote string) error {
 	data, err := os.ReadFile(nameNote)
 	if err != nil {
 		return fmt.Errorf("error reading file '%s' : %w", nameNote, err)
 	}
-
+	// Fix potential panic when checking empty files
+	if string(data) == "" {
+		fmt.Printf("'%s' is empty\n", nameNote)
+		return errSkipNote
+	}
 	content := strings.Split(string(data), "\n")
+
 	// the .Split leave me with a final empty string element
 	content = content[:len(content)-1]
 	newContent := ""
 
+	// WARN: what if the first line is empty?
 	if canonRe.MatchString(content[0]) {
 		newContent += content[0] + "\n"
 	} else {
@@ -138,6 +156,7 @@ func checkFormatNote(nameNote string) error {
 			fmt.Println("Choose operation")
 			fmt.Println("1- Add line above")
 			fmt.Println("2- Edit line")
+			fmt.Println("3- Erase line")
 			fmt.Print("> ")
 			opt, err := reader.ReadString('\n')
 			if err != nil {
@@ -179,6 +198,8 @@ func checkFormatNote(nameNote string) error {
 							}
 						}
 					}
+				case "3":
+					continue
 				default:
 					fmt.Printf("'%s' is an invalid option.\n", opt)
 				}
@@ -189,6 +210,8 @@ func checkFormatNote(nameNote string) error {
 	// check each line after the first, for non-valid ones allow user to erase or modify
 	for n := 1; n < len(content); n++ {
 		switch {
+		case content[n] == "":
+			continue
 		case canonRe.MatchString(content[n]):
 			newContent += content[n] + "\n"
 		case dayNoWorkRe.MatchString(content[n]):
@@ -343,8 +366,6 @@ func checkFormatNote(nameNote string) error {
 					opt = strings.TrimSpace(opt)
 					switch opt {
 					case "1":
-						// Advance the counter, jump over the next line
-						n++
 						proceed = false
 					case "2":
 						line := liner.NewLiner()
@@ -363,8 +384,7 @@ func checkFormatNote(nameNote string) error {
 						}
 						proceed = false
 					case "3":
-						fmt.Printf("%s was skipped\n", nameNote)
-						return nil
+						return errSkipNote
 					default:
 						fmt.Printf("'%s' is an invalid option.\n", opt)
 					}
