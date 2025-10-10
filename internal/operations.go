@@ -124,15 +124,15 @@ func checkFormatNote(nameNote string) error {
 	}
 
 	content := strings.Split(string(data), "\n")
+	// the .Split leave me with a final empty string element
+	content = content[:len(content)-1]
 	newContent := ""
 
 	if canonRe.MatchString(content[0]) {
 		newContent += content[0] + "\n"
 	} else {
-		// TODO: here i will use liner package to modify the ones that are wrong
-		// how do i add a line?
-		// either i have something wrong, or i have nothing and the first line is "valid"
 		for {
+			fmt.Println("File:", nameNote)
 			fmt.Println("Current first line:")
 			fmt.Println(content[0])
 			fmt.Println("Choose operation")
@@ -209,6 +209,7 @@ func checkFormatNote(nameNote string) error {
 				// error, the next line is invalid
 				proceed := true
 				for proceed {
+					fmt.Println("File:", nameNote)
 					fmt.Println("Current line:")
 					fmt.Println(content[n])
 					fmt.Println("The line below is invalid")
@@ -238,17 +239,53 @@ func checkFormatNote(nameNote string) error {
 		case dayWorkRe.MatchString(content[n]):
 			newContent += content[n] + "\n"
 			switch {
+			case n+1 > len(content):
+				fmt.Println("File:", nameNote)
+				fmt.Println("Current line:")
+				fmt.Println(content[n])
+				fmt.Println("There are no entries for procedings, will be filled with 0")
+				newContent += "M:0" + "\n"
+				newContent += "T:0" + "\n"
 			case procedingsRe.MatchString(content[n+1]):
 				continue
 			default:
-				newContent += "M:0" + "\n"
-				newContent += "T:0" + "\n"
+				// error, the next line is invalid
+				proceed := true
+				for proceed {
+					fmt.Println("File:", nameNote)
+					fmt.Println("Current line:")
+					fmt.Println(content[n])
+					fmt.Println("The line below is invalid")
+					fmt.Println(content[n+1])
+					fmt.Println("Choose what to do")
+					fmt.Println("1- Erase line")
+					fmt.Println("2- Leave it(will be prompted to modify it later)")
+					fmt.Print("> ")
+					opt, err := reader.ReadString('\n')
+					if err != nil {
+						log.Printf("error reading input: %v\n", err)
+					} else {
+						opt = strings.TrimSpace(opt)
+						switch opt {
+						case "1":
+							// Advance the counter, jump over the next line
+							n++
+							proceed = false
+						case "2":
+							proceed = false
+						default:
+							fmt.Printf("'%s' is an invalid option.\n", opt)
+						}
+					}
+				}
 			}
 		case procedingsRe.MatchString(content[n]):
 			newContent += content[n] + "\n"
 			switch {
 			case n+1 == len(content):
 				newContent, _ = strings.CutSuffix(newContent, "\n")
+			case procedingsRe.MatchString(content[n+1]):
+				continue
 			case canonRe.MatchString(content[n+1]):
 				continue
 			case dayNoWorkRe.MatchString(content[n+1]):
@@ -259,6 +296,7 @@ func checkFormatNote(nameNote string) error {
 				// error, the next line is invalid
 				proceed := true
 				for proceed {
+					fmt.Println("File:", nameNote)
 					fmt.Println("Current line:")
 					fmt.Println(content[n])
 					fmt.Println("The line below is invalid")
@@ -289,12 +327,14 @@ func checkFormatNote(nameNote string) error {
 			// Non valid line
 			proceed := true
 			for proceed {
+				fmt.Println("File:", nameNote)
 				fmt.Println("Current line:")
 				fmt.Println(content[n])
 				fmt.Println("The line is invalid")
 				fmt.Println("Choose what to do")
 				fmt.Println("1- Erase line")
 				fmt.Println("2- Modify")
+				fmt.Println("3- Skip note (need to manually change something about the note)")
 				fmt.Print("> ")
 				opt, err := reader.ReadString('\n')
 				if err != nil {
@@ -322,6 +362,9 @@ func checkFormatNote(nameNote string) error {
 							}
 						}
 						proceed = false
+					case "3":
+						fmt.Printf("%s was skipped\n", nameNote)
+						return nil
 					default:
 						fmt.Printf("'%s' is an invalid option.\n", opt)
 					}
@@ -334,6 +377,7 @@ func checkFormatNote(nameNote string) error {
 		retry := true
 		for retry {
 			if err := os.WriteFile(nameNote, []byte(newContent), 0666); err != nil {
+				fmt.Println("File:", nameNote)
 				log.Printf("error saving the note: %v\n", err)
 				fmt.Println("Do you want to retry? (y/n)")
 				fmt.Print("> ")
@@ -353,7 +397,7 @@ func checkFormatNote(nameNote string) error {
 					}
 				}
 			} else {
-				fmt.Println("Modifications successfully saved")
+				fmt.Printf("Modifications for '%s' successfully saved\n", nameNote)
 				retry = false
 			}
 		}

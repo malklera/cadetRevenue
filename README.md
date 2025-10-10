@@ -91,6 +91,16 @@ Row: id, year int, month int, day int, canon int, income int, expenses int
     - Show Notes
     - Exit
 
+## TO DO:
+
+[ ] If a procedings gets cut by an accidental new line i will have to manually
+modify the file
+```
+M:2000+3000+
+4000
+```
+
+
 ## Test cases
 
 This should be all valid
