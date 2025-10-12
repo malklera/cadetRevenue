@@ -15,11 +15,13 @@ import (
 )
 
 var (
-	fileNameRe   = regexp.MustCompile(`^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)-\d{1}-(\d{4})\.txt$`)
-	canonRe      = regexp.MustCompile(`^Canon \d+$`)
-	dayNoWorkRe  = regexp.MustCompile(`^(Lunes|Martes|Miércoles|Miercoles|Jueves|Viernes|Sábado|Sabado) \d{1,2}\/\d{1,2}: *(0|-\d+)$`)
-	dayWorkRe    = regexp.MustCompile(`^(Lunes|Martes|Miércoles|Miercoles|Jueves|Viernes|Sábado|Sabado) \d{1,2}\/\d{1,2}$`)
-	procedingsRe = regexp.MustCompile(`^(M|T): *(?:-\d+|\d+(?:\+\d+)*(?:-\d+)?)$`)
+	fileNameRe     = regexp.MustCompile(`^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)-\d{1}-(\d{4})\.txt$`)
+	canonRe        = regexp.MustCompile(`^canon \d+$`)
+	dayNoWorkRe    = regexp.MustCompile(`^(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado) \d{1,2}\/\d{1,2}: *(0|-\d+)$`)
+	dayWorkRe      = regexp.MustCompile(`^(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado) \d{1,2}\/\d{1,2}$`)
+	dayWorkCanonRe = regexp.MustCompile(`^(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado) (\d{1,2}\/\d{1,2}) (canon \d+)$`)
+
+	procedingsRe = regexp.MustCompile(`^(m|t): *(?:-\d+|\d+(?:\+\d+)*(?:-\d+)?)$`)
 )
 
 // Indicates that there are no .txt files on the current directory
@@ -87,7 +89,7 @@ func checkFileName(file string) (string, error) {
 						opt = strings.TrimSpace(opt)
 						switch opt {
 						case "y", "Y":
-							continue
+							break
 						case "n", "N":
 							return file, errRenameCancel
 						default:
@@ -134,86 +136,95 @@ func checkFormatNote(nameNote string) error {
 	if err != nil {
 		return fmt.Errorf("error reading file '%s' : %w", nameNote, err)
 	}
+	fmt.Println()
+	fmt.Println("Procesing:", nameNote)
 	// Fix potential panic when checking empty files
 	if string(data) == "" {
 		fmt.Printf("'%s' is empty\n", nameNote)
 		return errSkipNote
 	}
-	content := strings.Split(string(data), "\n")
+	content := strings.Split(strings.ToLower(string(data)), "\n")
 
 	// the .Split leave me with a final empty string element
 	content = content[:len(content)-1]
 	newContent := ""
+	n := 0
 
-	// WARN: what if the first line is empty?
-	if canonRe.MatchString(content[0]) {
-		newContent += content[0] + "\n"
-	} else {
-		for {
-			fmt.Println("File:", nameNote)
-			fmt.Println("Current first line:")
-			fmt.Println(content[0])
-			fmt.Println("Choose operation")
-			fmt.Println("1- Add line above")
-			fmt.Println("2- Edit line")
-			fmt.Println("3- Erase line")
-			fmt.Print("> ")
-			opt, err := reader.ReadString('\n')
-			if err != nil {
-				log.Printf("error reading input: %v\n", err)
+	for {
+		if canonRe.MatchString(content[n]) {
+			newContent += content[n] + "\n"
+			break
+		} else {
+			if content[n] == "" {
+				n++
 			} else {
-				opt = strings.TrimSpace(opt)
-				switch opt {
-				case "1":
-					// NOTE: How is the user suppose to know what the canon should be?
-					for {
-						fmt.Println("New line:")
-						fmt.Print("> ")
-						line, err := reader.ReadString('\n')
-						if err != nil {
-							log.Printf("error reading input: %v\n", err)
-						} else {
-							line = strings.TrimSpace(line)
-							if canonRe.MatchString(line) {
-								newContent += line + "\n"
-								break
+				fmt.Println()
+				fmt.Println("File:", nameNote)
+				fmt.Println("Current first line:")
+				fmt.Println(content[n])
+				fmt.Println("Choose operation")
+				fmt.Println("1- Add line above")
+				fmt.Println("2- Edit line")
+				fmt.Println("3- Erase line")
+				fmt.Print("> ")
+				opt, err := reader.ReadString('\n')
+				if err != nil {
+					log.Printf("error reading input: %v\n", err)
+				} else {
+					opt = strings.TrimSpace(opt)
+					switch opt {
+					case "1":
+						// NOTE: How is the user suppose to know what the canon should be?
+						for {
+							fmt.Println("New line:")
+							fmt.Print("> ")
+							line, err := reader.ReadString('\n')
+							if err != nil {
+								log.Printf("error reading input: %v\n", err)
 							} else {
-								fmt.Printf("'%s' is an invalid line\n", line)
+								line = strings.TrimSpace(line)
+								if canonRe.MatchString(line) {
+									newContent += line + "\n"
+									break
+								} else {
+									fmt.Printf("'%s' is an invalid line\n", line)
+								}
 							}
 						}
-					}
-				case "2":
-					line := liner.NewLiner()
-					defer line.Close()
-					for {
-						input, err := line.PrefilledInput(content[0], -1)
-						if err != nil {
-							log.Printf("error on input: %v\n", err)
-						} else {
-							if canonRe.MatchString(input) {
-								newContent += input + "\n"
-								break
+					case "2":
+						line := liner.NewLiner()
+						defer line.Close()
+						for {
+							input, err := line.PrefilledInput(content[n], -1)
+							if err != nil {
+								log.Printf("error on input: %v\n", err)
 							} else {
-								fmt.Printf("'%s' is an invalid line\n", input)
+								if canonRe.MatchString(input) {
+									newContent += input + "\n"
+									break
+								} else {
+									fmt.Printf("'%s' is an invalid line\n", input)
+								}
 							}
 						}
+					case "3":
+						n++
+					default:
+						fmt.Printf("'%s' is an invalid option.\n", opt)
 					}
-				case "3":
-					continue
-				default:
-					fmt.Printf("'%s' is an invalid option.\n", opt)
 				}
 			}
 		}
 	}
 
 	// check each line after the first, for non-valid ones allow user to erase or modify
-	for n := 1; n < len(content); n++ {
+	for n < len(content) {
 		switch {
 		case content[n] == "":
-			continue
+			n++
 		case canonRe.MatchString(content[n]):
 			newContent += content[n] + "\n"
+			n++
 		case dayNoWorkRe.MatchString(content[n]):
 			day := strings.Split(content[n], ":")
 			newContent += day[0] + "\n"
@@ -223,15 +234,18 @@ func checkFormatNote(nameNote string) error {
 			case n+1 == len(content):
 				newContent, _ = strings.CutSuffix(newContent, "\n")
 			case canonRe.MatchString(content[n+1]):
-				continue
+				break
 			case dayNoWorkRe.MatchString(content[n+1]):
-				continue
+				break
 			case dayWorkRe.MatchString(content[n+1]):
-				continue
+				break
+			case dayWorkCanonRe.MatchString(content[n+1]):
+				break
 			default:
 				// error, the next line is invalid
 				proceed := true
 				for proceed {
+					fmt.Println()
 					fmt.Println("File:", nameNote)
 					fmt.Println("Current line:")
 					fmt.Println(content[n])
@@ -259,10 +273,12 @@ func checkFormatNote(nameNote string) error {
 					}
 				}
 			}
+			n++
 		case dayWorkRe.MatchString(content[n]):
 			newContent += content[n] + "\n"
 			switch {
 			case n+1 > len(content):
+				fmt.Println()
 				fmt.Println("File:", nameNote)
 				fmt.Println("Current line:")
 				fmt.Println(content[n])
@@ -270,11 +286,12 @@ func checkFormatNote(nameNote string) error {
 				newContent += "M:0" + "\n"
 				newContent += "T:0" + "\n"
 			case procedingsRe.MatchString(content[n+1]):
-				continue
+				break
 			default:
 				// error, the next line is invalid
 				proceed := true
 				for proceed {
+					fmt.Println()
 					fmt.Println("File:", nameNote)
 					fmt.Println("Current line:")
 					fmt.Println(content[n])
@@ -302,23 +319,76 @@ func checkFormatNote(nameNote string) error {
 					}
 				}
 			}
+			n++
+		case dayWorkCanonRe.MatchString(content[n]):
+			subStrings := dayWorkCanonRe.FindStringSubmatch(content[n])
+			newContent += subStrings[3] + "\n"
+			newContent += subStrings[1] + subStrings[2] + "\n"
+			switch {
+			case n+1 > len(content):
+				fmt.Println()
+				fmt.Println("File:", nameNote)
+				fmt.Println("Current line:")
+				fmt.Println(content[n])
+				fmt.Println("There are no entries for procedings, will be filled with 0")
+				newContent += "M:0" + "\n"
+				newContent += "T:0" + "\n"
+			case procedingsRe.MatchString(content[n+1]):
+				break
+			default:
+				// error, the next line is invalid
+				proceed := true
+				for proceed {
+					fmt.Println()
+					fmt.Println("File:", nameNote)
+					fmt.Println("Current line:")
+					fmt.Println(content[n])
+					fmt.Println("The line below is invalid")
+					fmt.Println(content[n+1])
+					fmt.Println("Choose what to do")
+					fmt.Println("1- Erase line")
+					fmt.Println("2- Leave it(will be prompted to modify it later)")
+					fmt.Print("> ")
+					opt, err := reader.ReadString('\n')
+					if err != nil {
+						log.Printf("error reading input: %v\n", err)
+					} else {
+						opt = strings.TrimSpace(opt)
+						switch opt {
+						case "1":
+							// Advance the counter, jump over the next line
+							n++
+							proceed = false
+						case "2":
+							proceed = false
+						default:
+							fmt.Printf("'%s' is an invalid option.\n", opt)
+						}
+					}
+				}
+			}
+			n++
+
 		case procedingsRe.MatchString(content[n]):
 			newContent += content[n] + "\n"
 			switch {
 			case n+1 == len(content):
 				newContent, _ = strings.CutSuffix(newContent, "\n")
 			case procedingsRe.MatchString(content[n+1]):
-				continue
+				break
 			case canonRe.MatchString(content[n+1]):
-				continue
+				break
 			case dayNoWorkRe.MatchString(content[n+1]):
-				continue
+				break
 			case dayWorkRe.MatchString(content[n+1]):
-				continue
+				break
+			case dayWorkCanonRe.MatchString(content[n+1]):
+				break
 			default:
 				// error, the next line is invalid
 				proceed := true
 				for proceed {
+					fmt.Println()
 					fmt.Println("File:", nameNote)
 					fmt.Println("Current line:")
 					fmt.Println(content[n])
@@ -346,10 +416,12 @@ func checkFormatNote(nameNote string) error {
 					}
 				}
 			}
+			n++
 		default:
 			// Non valid line
 			proceed := true
 			for proceed {
+				fmt.Println()
 				fmt.Println("File:", nameNote)
 				fmt.Println("Current line:")
 				fmt.Println(content[n])
@@ -390,6 +462,7 @@ func checkFormatNote(nameNote string) error {
 					}
 				}
 			}
+			n++
 		}
 	}
 	// Was the note modified?
@@ -397,6 +470,7 @@ func checkFormatNote(nameNote string) error {
 		retry := true
 		for retry {
 			if err := os.WriteFile(nameNote, []byte(newContent), 0666); err != nil {
+				fmt.Println()
 				fmt.Println("File:", nameNote)
 				log.Printf("error saving the note: %v\n", err)
 				fmt.Println("Do you want to retry? (y/n)")
@@ -408,7 +482,7 @@ func checkFormatNote(nameNote string) error {
 					opt = strings.TrimSpace(opt)
 					switch opt {
 					case "y", "Y":
-						continue
+						break
 					case "n", "N":
 						fmt.Println("The modifications were not saved")
 						retry = false
@@ -417,6 +491,7 @@ func checkFormatNote(nameNote string) error {
 					}
 				}
 			} else {
+				fmt.Println()
 				fmt.Printf("Modifications for '%s' successfully saved\n", nameNote)
 				retry = false
 			}

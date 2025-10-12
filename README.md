@@ -100,7 +100,8 @@ on each
 [x] Make sure a note has content, otherwise the program panic(found out while
 testing checkFileName())
 [x] On checkFormatNote() if I encounter an empty line, erase it without asking the user
-[ ] Test all my test cases for checkFormatNote()
+[x] Change my regex's, will make all strings lower case, simpler to dealth with
+[x] Test all my test cases for checkFormatNote()
 [ ] Ensure data for a specifyc day is unique, i copied the content of abril-4-2024.txt to abril-5-2024.txt to test
 [ ] Create the DB schema and a initial selection of functions to interface with it,
 create table, input data, get data out?? think about this one more
@@ -360,6 +361,24 @@ Canon 7000
 Lunes 29/9:-4000
 Martes 30/9: 0
 Miércoles 1/10
+Jueves 2/10
+M:-4500
+T:-4000
+Viernes 3/10
+M:2500+2200+2500+6000+2000+4000+4000+2000-14800
+T:2000+5000+2000+2000+2000+3000+2500-3300
+Sábado 4/10
+M:2000+2500+4500+4500+4000-2000
+
+```
+
+Error on Miercoles
+```
+
+Canon 7000
+Lunes 29/9:-4000
+Martes 30/9: 0
+Miércoles 1/10 Canon 7500
 Jueves 2/10
 M:-4500
 T:-4000

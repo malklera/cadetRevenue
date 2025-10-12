@@ -36,7 +36,7 @@ func Menu() {
 							err := checkFormatNote(note)
 							switch err {
 							case nil:
-								continue
+								break
 							case errSkipNote:
 								fmt.Printf("Formating of '%s' skipped\n", note)
 							default:
