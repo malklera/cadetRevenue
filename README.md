@@ -123,6 +123,8 @@ Row: id, year int, month int, day int, canon int, income int, expenses int
 
 [ ] If a procedings gets cut by an accidental new line i will have to manually modify the file
 
+[ ] For now the used directories have to be created manually
+
 
 ```
 M:2000+3000+

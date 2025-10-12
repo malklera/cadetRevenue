@@ -27,7 +27,7 @@ func Menu() {
 			opt = strings.TrimSpace(opt)
 			switch opt {
 			case "1":
-				listNotes, err := listFiles("originals")
+				listNotes, err := listFiles(originalsDir)
 				switch err {
 				case nil:
 					for n := range listNotes {
@@ -37,7 +37,6 @@ func Menu() {
 							err := checkFormatNote(note)
 							switch err {
 							case nil:
-								// TODO: Formated notes should go to the Formated directory
 								break
 							case errSkipNote:
 								fmt.Printf("Formating of '%s' skipped\n", note)
@@ -47,11 +46,11 @@ func Menu() {
 						case errRenameCancel:
 							fmt.Printf("The renaming of '%s' was canceled\n", note)
 						default:
-							log.Printf("error checking the format of '%s' : %v\n", note, err)
+							log.Printf("error checking the name of '%s' : %v\n", note, err)
 						}
 					}
 				case errNoFiles:
-					fmt.Println("There are no files to process")
+					fmt.Println("There are no files to format")
 				default:
 					log.Printf("error listing files: %v\n", err)
 				}

@@ -2,7 +2,7 @@
 package internal
 
 import (
-	"cadetRevenue/internal/database"
+	// "cadetRevenue/internal/database"
 	"errors"
 	"fmt"
 	"github.com/malklera/sliner/pkg/liner"
@@ -36,6 +36,10 @@ var errSkipNote = errors.New("skip formatting of note")
 // Indicates that the given directory is invalid
 var errInvalidDir = errors.New("the given directory is invalid")
 
+var originalsDir = "originals"
+var formatedDir = "formated"
+var processedDir = "processed"
+
 // Take the name of a file, check that it is the correct format, if not ask the
 // user for input, return a correctly formated file name
 func checkFileName(file string) (string, error) {
@@ -64,8 +68,7 @@ func checkFileName(file string) (string, error) {
 				if err != nil {
 					log.Printf("error on input: %v\n", err)
 				} else {
-					newPath := filepath.Join(".", input)
-					if _, err := os.Stat(newPath); err == nil {
+					if _, err := os.Stat(filepath.Join(originalsDir, input)); err == nil {
 						fmt.Printf("File name '%s' already exist, input a different one\n", input)
 					} else if !errors.Is(err, fs.ErrNotExist) {
 						log.Printf("error checking if file '%s' exist: %v\n", input, err)
@@ -81,7 +84,7 @@ func checkFileName(file string) (string, error) {
 		} else {
 			retry := true
 			for retry {
-				if err := os.Rename(filepath.Join(".", file), filepath.Join(".", currentFileName)); err != nil {
+				if err := os.Rename(filepath.Join(originalsDir, file), filepath.Join(originalsDir, currentFileName)); err != nil {
 					log.Printf("error renaming file '%s' to '%s': %v\n", file, currentFileName, err)
 					fmt.Println("Do you want to retry? (y/n)")
 					fmt.Print("> ")
@@ -112,7 +115,7 @@ func checkFileName(file string) (string, error) {
 
 // return a slice of [file.Name()].
 func listFiles(dir string) ([]string, error) {
-	allFiles, err := os.ReadDir(filepath.Join(".", dir))
+	allFiles, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, fmt.Errorf("error listing files: %w", err)
 	}
@@ -132,15 +135,17 @@ func listFiles(dir string) ([]string, error) {
 	return textFiles, nil
 }
 
-// accept the name of a file, allow to modify or cancel the modifycation, return
+// accept the name of a file, allow to modify or cancel the modification, return
 // nil if all operations were execute correctly
 func checkFormatNote(nameNote string) error {
-	data, err := os.ReadFile(nameNote)
+	orgNote := filepath.Join(originalsDir, nameNote)
+	data, err := os.ReadFile(orgNote)
 	if err != nil {
 		return fmt.Errorf("error reading file '%s' : %w", nameNote, err)
 	}
 	fmt.Println()
 	fmt.Println("Procesing:", nameNote)
+
 	// Fix potential panic when checking empty files
 	if string(data) == "" {
 		fmt.Printf("'%s' is empty\n", nameNote)
@@ -468,39 +473,120 @@ func checkFormatNote(nameNote string) error {
 			n++
 		}
 	}
-	// Was the note modified?
-	if string(data) != newContent {
-		retry := true
-		for retry {
-			if err := os.WriteFile(nameNote, []byte(newContent), 0666); err != nil {
-				fmt.Println()
-				fmt.Println("File:", nameNote)
-				log.Printf("error saving the note: %v\n", err)
-				fmt.Println("Do you want to retry? (y/n)")
-				fmt.Print("> ")
-				opt, err := reader.ReadString('\n')
-				if err != nil {
-					log.Printf("error reading input: %v\n", err)
+
+	// Move the file
+
+	// Loop to os.CreateTemp()
+	for {
+		tempFile, err := os.CreateTemp(formatedDir, nameNote)
+		tempName := filepath.Join(formatedDir, tempFile.Name())
+		formatNote := filepath.Join(formatedDir, nameNote)
+
+		if err != nil {
+			fmt.Println()
+			fmt.Println("File:", tempName)
+			log.Printf("error creating temporary file: %v\n", err)
+			fmt.Println("Do you want to retry? (y/n)")
+			fmt.Print("> ")
+			opt, err := reader.ReadString('\n')
+			if err != nil {
+				log.Printf("error reading input: %v\n", err)
+			} else {
+				opt = strings.TrimSpace(opt)
+				switch opt {
+				case "y", "Y":
+					break
+				case "n", "N":
+					return errSkipNote
+				default:
+					fmt.Printf("'%s' is an invalid option.\n", opt)
+				}
+			}
+		} else {
+			defer os.Remove(tempName)
+			for {
+				if _, err := tempFile.Write([]byte(newContent)); err != nil {
+					fmt.Println()
+					fmt.Println("File:", tempName)
+					log.Printf("error writing to the temporary file: %v\n", err)
+					fmt.Println("Do you want to retry? (y/n)")
+					fmt.Print("> ")
+					opt, err := reader.ReadString('\n')
+					if err != nil {
+						log.Printf("error reading input: %v\n", err)
+					} else {
+						opt = strings.TrimSpace(opt)
+						switch opt {
+						case "y", "Y":
+							break
+						case "n", "N":
+							return errSkipNote
+						default:
+							fmt.Printf("'%s' is an invalid option.\n", opt)
+						}
+					}
 				} else {
-					opt = strings.TrimSpace(opt)
-					switch opt {
-					case "y", "Y":
-						break
-					case "n", "N":
-						fmt.Println("The modifications were not saved")
-						retry = false
-					default:
-						fmt.Printf("'%s' is an invalid option.\n", opt)
+					// data was writen
+					if err := tempFile.Close(); err != nil {
+						log.Printf("error closing temporary file after writing: %v", err)
+					} else {
+						for {
+							if err := os.Rename(tempName, formatNote); err != nil {
+								fmt.Println()
+								fmt.Println("File:", tempName)
+								log.Printf("error renaming '%s' to '%s' : %v\n", tempName, formatNote, err)
+								fmt.Println("Do you want to retry? (y/n)")
+								fmt.Print("> ")
+								opt, err := reader.ReadString('\n')
+								if err != nil {
+									log.Printf("error reading input: %v\n", err)
+								} else {
+									opt = strings.TrimSpace(opt)
+									switch opt {
+									case "y", "Y":
+										break
+									case "n", "N":
+										return errSkipNote
+									default:
+										fmt.Printf("'%s' is an invalid option.\n", opt)
+									}
+								}
+							} else {
+								// os.Rename was successfull
+								// has to Remove originals/nameNote
+								for {
+									if err := os.Remove(orgNote); err != nil {
+										fmt.Println()
+										fmt.Println("File:", orgNote)
+										log.Printf("error removing '%s' : %v\n", orgNote, err)
+										fmt.Println("Do you want to retry? (y/n)")
+										fmt.Print("> ")
+										opt, err := reader.ReadString('\n')
+										if err != nil {
+											log.Printf("error reading input: %v\n", err)
+										} else {
+											opt = strings.TrimSpace(opt)
+											switch opt {
+											case "y", "Y":
+												break
+											case "n", "N":
+												return errSkipNote
+											default:
+												fmt.Printf("'%s' is an invalid option.\n", opt)
+											}
+										}
+									} else {
+										// os.Remove successfull
+										return nil
+									}
+								}
+							}
+						}
 					}
 				}
-			} else {
-				fmt.Println()
-				fmt.Printf("Modifications for '%s' successfully saved\n", nameNote)
-				retry = false
 			}
 		}
 	}
-	return nil
 }
 
 // Evaluate if the given line conform to any of the declared regex's
@@ -515,6 +601,6 @@ func validLine(line string) bool {
 }
 
 // Accept the name of a file, extract the data from it, return a [Entry] struct
-func extractData(file string) (database.Entry, error) {
-
-}
+// func extractData(file string) (database.Entry, error) {
+//
+// }
