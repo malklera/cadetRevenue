@@ -2,7 +2,7 @@
 package internal
 
 import (
-	// "cadetRevenue/internal/database"
+	"cadetRevenue/internal/database"
 	"errors"
 	"fmt"
 	"github.com/malklera/sliner/pkg/liner"
@@ -32,6 +32,9 @@ var errRenameCancel = errors.New("renaming canceled")
 
 // Indicates skiping the formatting of the note
 var errSkipNote = errors.New("skip formatting of note")
+
+// Indicates that the given directory is invalid
+var errInvalidDir = errors.New("the given directory is invalid")
 
 // Take the name of a file, check that it is the correct format, if not ask the
 // user for input, return a correctly formated file name
@@ -108,13 +111,13 @@ func checkFileName(file string) (string, error) {
 }
 
 // return a slice of [file.Name()].
-func listFiles() ([]string, error) {
-	allFiles, err := os.ReadDir(".")
+func listFiles(dir string) ([]string, error) {
+	allFiles, err := os.ReadDir(filepath.Join(".", dir))
 	if err != nil {
 		return nil, fmt.Errorf("error listing files: %w", err)
 	}
 
-	var textFiles []string
+	textFiles := make([]string, 0, len(allFiles))
 
 	for _, file := range allFiles {
 		if !file.IsDir() && strings.HasSuffix(file.Name(), ".txt") {
@@ -509,4 +512,9 @@ func validLine(line string) bool {
 	default:
 		return false
 	}
+}
+
+// Accept the name of a file, extract the data from it, return a [Entry] struct
+func extractData(file string) (database.Entry, error) {
+
 }
