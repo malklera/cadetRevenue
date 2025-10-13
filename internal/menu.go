@@ -59,6 +59,8 @@ func Menu() {
 				fmt.Println("move the note with the correct format to 'originals' directory")
 			case "2":
 				// TODO: here goes the procesing of formated notes
+				// extract data
+				// put data on the db
 			case "3":
 				fmt.Println("call showMenu()")
 			case "4":

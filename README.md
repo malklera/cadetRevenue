@@ -107,6 +107,10 @@ Row: id, year int, month int, day int, canon int, income int, expenses int
 
 [x] NEED to test checkFileName() again, change the structure of the project, now files live either on originals/ or formated/ or processed/
 
+[x] FIX error on formating, canon gets included twice at the beginning of a file
+
+[ ] FIX error on some temp files are not removed, has to see in which cases is it ( when i fix the formating above I do not see this error)
+
 [ ] Create the DB schema and a initial selection of functions to interface with it, create table, input data, get data out?? think about this one more
 
 [ ] Create a function to extract data from correctly formated notes, and put it on the DB

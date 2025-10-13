@@ -20,7 +20,6 @@ var (
 	dayNoWorkRe    = regexp.MustCompile(`^(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado) \d{1,2}\/\d{1,2}: *(0|-\d+)$`)
 	dayWorkRe      = regexp.MustCompile(`^(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado) \d{1,2}\/\d{1,2}$`)
 	dayWorkCanonRe = regexp.MustCompile(`^(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado) (\d{1,2}\/\d{1,2}) (canon \d+)$`)
-
 	procedingsRe = regexp.MustCompile(`^(m|t): *(?:-\d+|\d+(?:\+\d+)*(?:-\d+)?)$`)
 )
 
@@ -145,7 +144,7 @@ func checkFormatNote(nameNote string) error {
 		return fmt.Errorf("error reading file '%s' : %w", nameNote, err)
 	}
 	fmt.Println()
-	fmt.Println("Procesing:", nameNote)
+	fmt.Println("Formating:", nameNote)
 
 	// Fix potential panic when checking empty files
 	if string(data) == "" {
@@ -154,14 +153,19 @@ func checkFormatNote(nameNote string) error {
 	}
 	content := strings.Split(strings.ToLower(string(data)), "\n")
 
+	// WARN: error on the formating of febrero-4-2024.txt, viernes 9/2
+
 	// the .Split leave me with a final empty string element
-	content = content[:len(content)-1]
+	if content[len(content)-1] == "" {
+		content = content[:len(content)-1]
+	}
 	newContent := ""
 	n := 0
 
 	for {
 		if canonRe.MatchString(content[n]) {
 			newContent += content[n] + "\n"
+			n++
 			break
 		} else {
 			if content[n] == "" {
@@ -332,7 +336,7 @@ func checkFormatNote(nameNote string) error {
 		case dayWorkCanonRe.MatchString(content[n]):
 			subStrings := dayWorkCanonRe.FindStringSubmatch(content[n])
 			newContent += subStrings[3] + "\n"
-			newContent += subStrings[1] + subStrings[2] + "\n"
+			newContent += subStrings[1] + " " + subStrings[2] + "\n"
 			switch {
 			case n+1 > len(content):
 				fmt.Println()
@@ -602,6 +606,18 @@ func validLine(line string) bool {
 }
 
 // Accept the name of a file, extract the data from it, return a [Entry] struct
-// func extractData(file string) (database.Entry, error) {
+// func processNote(nameNote string) (database.Entry, error) {
+// 	orgNote := filepath.Join(formatedDir, nameNote)
+// 	data, err := os.ReadFile(orgNote)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("error reading file '%s' : %w", nameNote, err)
+// 	}
+// 	fmt.Println()
+// 	fmt.Println("Processing:", nameNote)
+//
+// 	content := strings.Split(string(data), "\n")
+//
+// 	// the .Split leave me with a final empty string element
+// 	content = content[:len(content)-1]
 //
 // }
