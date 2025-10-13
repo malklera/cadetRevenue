@@ -13,6 +13,7 @@ var reader = bufio.NewReader(os.Stdin)
 
 func Menu() {
 	for {
+		fmt.Println()
 		fmt.Println("Operations (use numbers to choose e.g. 1, 2, 3)")
 		fmt.Println("1- Format notes")
 		fmt.Println("2- Process notes")
@@ -57,8 +58,10 @@ func Menu() {
 				fmt.Println("add the results to a db")
 				fmt.Println("move the note with the correct format to 'originals' directory")
 			case "2":
-				fmt.Println("call showMenu()")
+				// TODO: here goes the procesing of formated notes
 			case "3":
+				fmt.Println("call showMenu()")
+			case "4":
 				innerFor := true
 				for innerFor {
 					fmt.Println("Confirm exit? (y/n)")

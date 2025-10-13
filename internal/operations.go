@@ -57,6 +57,7 @@ func checkFileName(file string) (string, error) {
 				break
 			} else {
 				// NOTE: Should ask the user if it want to rename the file?
+				fmt.Println()
 				fmt.Printf("'%s' is not a valid file name\n", currentFileName)
 				fmt.Println("The correct format is: month-int-year.txt")
 				fmt.Println("Where 'month' is a valid month written in Spanish word")
@@ -479,8 +480,8 @@ func checkFormatNote(nameNote string) error {
 	// Loop to os.CreateTemp()
 	for {
 		tempFile, err := os.CreateTemp(formatedDir, nameNote)
-		tempName := filepath.Join(formatedDir, tempFile.Name())
-		formatNote := filepath.Join(formatedDir, nameNote)
+		tempName := tempFile.Name()
+		formatedNote := filepath.Join(formatedDir, nameNote)
 
 		if err != nil {
 			fmt.Println()
@@ -531,10 +532,10 @@ func checkFormatNote(nameNote string) error {
 						log.Printf("error closing temporary file after writing: %v", err)
 					} else {
 						for {
-							if err := os.Rename(tempName, formatNote); err != nil {
+							if err := os.Rename(tempName, formatedNote); err != nil {
 								fmt.Println()
 								fmt.Println("File:", tempName)
-								log.Printf("error renaming '%s' to '%s' : %v\n", tempName, formatNote, err)
+								log.Printf("error renaming '%s' to '%s' : %v\n", tempName, formatedNote, err)
 								fmt.Println("Do you want to retry? (y/n)")
 								fmt.Print("> ")
 								opt, err := reader.ReadString('\n')

@@ -105,13 +105,13 @@ Row: id, year int, month int, day int, canon int, income int, expenses int
 
 [x] Test all my test cases for checkFormatNote()
 
-[ ] NEED to test checkFileName() again, change the structure of the project, now files live either on originals/ or formated/ or processed/
-
-[ ] Ensure data for a specific day is unique, I copied the content of abril-4-2024.txt to abril-5-2024.txt to test
+[x] NEED to test checkFileName() again, change the structure of the project, now files live either on originals/ or formated/ or processed/
 
 [ ] Create the DB schema and a initial selection of functions to interface with it, create table, input data, get data out?? think about this one more
 
 [ ] Create a function to extract data from correctly formated notes, and put it on the DB
+
+[ ] Ensure data for a specific day is unique, I copied the content of abril-4-2024.txt to abril-5-2024.txt to test
 
 [ ] Move processed notes to the proceseed/ directory
 
