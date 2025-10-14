@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	// "strconv"
 	"strings"
 )
 
@@ -20,7 +21,7 @@ var (
 	dayNoWorkRe    = regexp.MustCompile(`^(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado) \d{1,2}\/\d{1,2}: *(0|-\d+)$`)
 	dayWorkRe      = regexp.MustCompile(`^(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado) \d{1,2}\/\d{1,2}$`)
 	dayWorkCanonRe = regexp.MustCompile(`^(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado) (\d{1,2}\/\d{1,2}) (canon \d+)$`)
-	procedingsRe = regexp.MustCompile(`^(m|t): *(?:-\d+|\d+(?:\+\d+)*(?:-\d+)?)$`)
+	procedingsRe   = regexp.MustCompile(`^(m|t): *(?:-\d+|\d+(?:\+\d+)*(?:-\d+)?)$`)
 )
 
 // Indicates that there are no .txt files on the current directory
@@ -115,6 +116,9 @@ func checkFileName(file string) (string, error) {
 
 // return a slice of [file.Name()].
 func listFiles(dir string) ([]string, error) {
+	if dir != originalsDir && dir != formatedDir && dir != processedDir {
+		return nil, errInvalidDir
+	}
 	allFiles, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, fmt.Errorf("error listing files: %w", err)
@@ -386,7 +390,7 @@ func checkFormatNote(nameNote string) error {
 			newContent += content[n] + "\n"
 			switch {
 			case n+1 == len(content):
-				newContent, _ = strings.CutSuffix(newContent, "\n")
+				newContent += "T:0"
 			case procedingsRe.MatchString(content[n+1]):
 				break
 			case canonRe.MatchString(content[n+1]):
@@ -605,19 +609,48 @@ func validLine(line string) bool {
 	}
 }
 
-// Accept the name of a file, extract the data from it, return a [Entry] struct
-// func processNote(nameNote string) (database.Entry, error) {
-// 	orgNote := filepath.Join(formatedDir, nameNote)
-// 	data, err := os.ReadFile(orgNote)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("error reading file '%s' : %w", nameNote, err)
-// 	}
+// ProcessNote accept the name of a file, extract the data from it, return a [Entry] struct
+// func ProcessNote(nameNote string) ([]database.Entry, error) {
 // 	fmt.Println()
 // 	fmt.Println("Processing:", nameNote)
 //
+// 	// Get the year
+// 	date := fileNameRe.FindStringSubmatch(nameNote)
+// 	year, err := strconv.Atoi(date[2])
+// 	if err != nil {
+// 		return nil, err
+// 	}
+//
+// 	orgNote := filepath.Join(formatedDir, nameNote)
+// 	data, err := os.ReadFile(orgNote)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 // 	content := strings.Split(string(data), "\n")
+// 	canon, err := strconv.Atoi(content[0])
+// 	if err != nil {
+// 		return nil, err
+// 	}
 //
-// 	// the .Split leave me with a final empty string element
-// 	content = content[:len(content)-1]
+// 	entries := make([]database.Entry, 0, 6)
+// 	// WARN: take this print out
+// 	fmt.Println("entries after make:", entries)
+// 	for _, line := range content {
+// 		var entry database.Entry
+// 		entry.Year = year
+// 		switch {
+// 		case canonRe.MatchString(line):
+// 			ammount := strings.Split(line, " ")
 //
+// 			canon = strconv.A
+// 		case dayNoWorkRe.MatchString(line):
+// 		case dayWorkRe.MatchString(line):
+// 		case procedingsRe.MatchString(line):
+// 		default:
+// 			return nil, fmt.Errorf("line '%s' of file '%s' has the wrong format", line, nameNote)
+// 		}
+// 		entries = append(entries, entry)
+// 	}
+// 	fmt.Println(entries)
+// 	return entries, nil
 // }

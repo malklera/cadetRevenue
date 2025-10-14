@@ -9,7 +9,7 @@ type Entry struct {
 	ID       int64
 	Year     int
 	Month    int
-	Day      int
+	Day      string
 	Canon    int
 	IncomeM   int
 	IncomeT   int

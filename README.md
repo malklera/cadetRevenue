@@ -109,11 +109,11 @@ Row: id, year int, month int, day int, canon int, income int, expenses int
 
 [x] FIX error on formating, canon gets included twice at the beginning of a file
 
-[ ] FIX error on some temp files are not removed, has to see in which cases is it ( when i fix the formating above I do not see this error)
-
-[ ] Create the DB schema and a initial selection of functions to interface with it, create table, input data, get data out?? think about this one more
+[x] Change the formating to add a T:0 to sabado, otherwise it will complicate the data extraction
 
 [ ] Create a function to extract data from correctly formated notes, and put it on the DB
+
+[ ] Create the DB schema and a initial selection of functions to interface with it, create table, input data, get data out?? think about this one more
 
 [ ] Ensure data for a specific day is unique, I copied the content of abril-4-2024.txt to abril-5-2024.txt to test
 
@@ -125,10 +125,9 @@ Row: id, year int, month int, day int, canon int, income int, expenses int
 
 [ ] Check all TODO and NOTE on the project and dealt with them
 
-[ ] If a procedings gets cut by an accidental new line i will have to manually modify the file
-
 [ ] For now the used directories have to be created manually
 
+[ ] If a procedings gets cut by an accidental new line i will have to manually modify the file
 
 ```
 M:2000+3000+
