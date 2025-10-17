@@ -111,6 +111,8 @@ Row: id, year int, month int, day int, canon int, income int, expenses int
 
 [x] Change the formating to add a T:0 to sabado, otherwise it will complicate the data extraction
 
+[ ] Change the formating to add 0 padding to dates
+
 [ ] Create a function to extract data from correctly formated notes, and put it on the DB
 
 [ ] Create the DB schema and a initial selection of functions to interface with it, create table, input data, get data out?? think about this one more
@@ -178,7 +180,7 @@ T:2000+2000
 Jueves 2/10
 M:-4500
 T:-4000
-Viernes 3/10
+Viernes 3/10 canon 7500
 M:2500+2200+2500+6000+2000+4000+4000+2000-14800
 T: 2000+5000+2000+2000+2000+3000+2500-3300
 Sábado 4/10

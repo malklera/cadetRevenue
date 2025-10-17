@@ -55,12 +55,20 @@ func Menu() {
 				default:
 					log.Printf("error listing files: %v\n", err)
 				}
-				fmt.Println("add the results to a db")
-				fmt.Println("move the note with the correct format to 'originals' directory")
 			case "2":
 				// TODO: here goes the procesing of formated notes
 				// extract data
 				// put data on the db
+				entry, err := processNote("abril-1-2024.txt")
+				if err != nil {
+					fmt.Println("err:", err)
+				}
+				fmt.Println(entry)
+				fmt.Println()
+				for _, e := range entry {
+					fmt.Println("date:", e.Date)
+				}
+
 			case "3":
 				fmt.Println("call showMenu()")
 			case "4":

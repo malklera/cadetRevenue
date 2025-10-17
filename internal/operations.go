@@ -2,7 +2,7 @@
 package internal
 
 import (
-	// "cadetRevenue/internal/database"
+	"cadetRevenue/internal/database"
 	"errors"
 	"fmt"
 	"github.com/malklera/sliner/pkg/liner"
@@ -11,8 +11,9 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	// "strconv"
+	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -157,8 +158,6 @@ func checkFormatNote(nameNote string) error {
 	}
 	content := strings.Split(strings.ToLower(string(data)), "\n")
 
-	// WARN: error on the formating of febrero-4-2024.txt, viernes 9/2
-
 	// the .Split leave me with a final empty string element
 	if content[len(content)-1] == "" {
 		content = content[:len(content)-1]
@@ -244,9 +243,9 @@ func checkFormatNote(nameNote string) error {
 			n++
 		case dayNoWorkRe.MatchString(content[n]):
 			day := strings.Split(content[n], ":")
-			newContent += day[0] + "\n"
-			newContent += "M:" + day[1] + "\n"
-			newContent += "T:0" + "\n"
+			newContent += checkPadding(day[0]) + "\n"
+			newContent += "m:" + day[1] + "\n"
+			newContent += "t:0" + "\n"
 			switch {
 			case n+1 == len(content):
 				newContent, _ = strings.CutSuffix(newContent, "\n")
@@ -292,7 +291,7 @@ func checkFormatNote(nameNote string) error {
 			}
 			n++
 		case dayWorkRe.MatchString(content[n]):
-			newContent += content[n] + "\n"
+			newContent += checkPadding(content[n]) + "\n"
 			switch {
 			case n+1 > len(content):
 				fmt.Println()
@@ -339,8 +338,7 @@ func checkFormatNote(nameNote string) error {
 			n++
 		case dayWorkCanonRe.MatchString(content[n]):
 			subStrings := dayWorkCanonRe.FindStringSubmatch(content[n])
-			newContent += subStrings[3] + "\n"
-			newContent += subStrings[1] + " " + subStrings[2] + "\n"
+			newContent += subStrings[3] + "\n" + checkPadding(subStrings[1]+" "+subStrings[2]) + "\n"
 			switch {
 			case n+1 > len(content):
 				fmt.Println()
@@ -348,8 +346,8 @@ func checkFormatNote(nameNote string) error {
 				fmt.Println("Current line:")
 				fmt.Println(content[n])
 				fmt.Println("There are no entries for procedings, will be filled with 0")
-				newContent += "M:0" + "\n"
-				newContent += "T:0" + "\n"
+				newContent += "m:0" + "\n"
+				newContent += "t:0" + "\n"
 			case procedingsRe.MatchString(content[n+1]):
 				break
 			default:
@@ -609,48 +607,136 @@ func validLine(line string) bool {
 	}
 }
 
-// ProcessNote accept the name of a file, extract the data from it, return a [Entry] struct
-// func ProcessNote(nameNote string) ([]database.Entry, error) {
-// 	fmt.Println()
-// 	fmt.Println("Processing:", nameNote)
-//
-// 	// Get the year
-// 	date := fileNameRe.FindStringSubmatch(nameNote)
-// 	year, err := strconv.Atoi(date[2])
-// 	if err != nil {
-// 		return nil, err
-// 	}
-//
-// 	orgNote := filepath.Join(formatedDir, nameNote)
-// 	data, err := os.ReadFile(orgNote)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	content := strings.Split(string(data), "\n")
-// 	canon, err := strconv.Atoi(content[0])
-// 	if err != nil {
-// 		return nil, err
-// 	}
-//
-// 	entries := make([]database.Entry, 0, 6)
-// 	// WARN: take this print out
-// 	fmt.Println("entries after make:", entries)
-// 	for _, line := range content {
-// 		var entry database.Entry
-// 		entry.Year = year
-// 		switch {
-// 		case canonRe.MatchString(line):
-// 			ammount := strings.Split(line, " ")
-//
-// 			canon = strconv.A
-// 		case dayNoWorkRe.MatchString(line):
-// 		case dayWorkRe.MatchString(line):
-// 		case procedingsRe.MatchString(line):
-// 		default:
-// 			return nil, fmt.Errorf("line '%s' of file '%s' has the wrong format", line, nameNote)
-// 		}
-// 		entries = append(entries, entry)
-// 	}
-// 	fmt.Println(entries)
-// 	return entries, nil
-// }
+// processNote accept the name of a file, extract the data from it, return a
+// slice of struct [Entry], at any error it gets returned, the notes are supposed
+// to be formated
+func processNote(nameNote string) ([]database.Entry, error) {
+	fmt.Println()
+	fmt.Println("Processing:", nameNote)
+
+	// Get the year
+	date := fileNameRe.FindStringSubmatch(nameNote)
+	year := date[2]
+
+	orgNote := filepath.Join(formatedDir, nameNote)
+	data, err := os.ReadFile(orgNote)
+	if err != nil {
+		return nil, err
+	}
+	content := strings.Split(string(data), "\n")
+
+	canon := 0
+
+	entries := make([]database.Entry, 0, 6)
+	n := 0
+	for n < len(content) {
+		var entry database.Entry
+		entry.Canon = canon
+		dateS := year + "-"
+		switch {
+		case canonRe.MatchString(content[n]):
+			line := strings.Split(content[n], " ")
+
+			canon, err = strconv.Atoi(line[1])
+			if err != nil {
+				return nil, err
+			}
+			n++
+		case dayWorkRe.MatchString(content[n]):
+			line := strings.Split(content[n], " ")
+			date := strings.Split(line[1], "/")
+			dateS += date[1] + "-" + date[0]
+			entry.Date, err = time.Parse(time.DateOnly, dateS)
+			if err != nil {
+				return nil, err
+			}
+			n++
+			// here process the procedings and advance the counter
+			expensesM := 0
+			entry.IncomeM, expensesM, err = processProcedings(content[n])
+			if err != nil {
+				return nil, err
+			}
+			n++
+			expensesT := 0
+			entry.IncomeT, expensesT, err = processProcedings(content[n])
+			if err != nil {
+				return nil, err
+			}
+			entry.Expenses = expensesM + expensesT
+			n++
+			entries = append(entries, entry)
+		default:
+			return nil, fmt.Errorf("line '%s' of file '%s' has the wrong format", content[n], nameNote)
+		}
+	}
+	fmt.Println(entries)
+	return entries, nil
+}
+
+// processProcedings take in a valid string of procedingsRe, returns income,
+// expenses, error
+func processProcedings(content string) (int, int, error) {
+	// T: 3000+2500-3300
+	// M:-4500
+	// M:3000-4500
+	// T:2000+2000
+	// M:2000
+	line := strings.Split(content, ":")
+	lineP := strings.TrimSpace(line[1])
+
+	procedings := 0
+	expenses := 0
+	switch {
+	case strings.Contains(lineP, "-"):
+		hasExp := strings.Split(lineP, "-")
+		exp, err := strconv.Atoi(hasExp[len(hasExp)-1])
+		if err != nil {
+			return 0, 0, err
+		}
+		expenses = exp * -1
+		if len(hasExp) > 1 && hasExp[0] != "" {
+			for p := range strings.SplitSeq(hasExp[0], "+") {
+				proc, err := strconv.Atoi(p)
+				if err != nil {
+					return 0, 0, err
+				}
+				procedings += proc
+			}
+		}
+	case strings.Contains(lineP, "+"):
+		for p := range strings.SplitSeq(lineP, "+") {
+			proc, err := strconv.Atoi(p)
+			if err != nil {
+				return 0, 0, err
+			}
+			procedings += proc
+		}
+	default:
+		proc, err := strconv.Atoi(lineP)
+		if err != nil {
+			return 0, 0, err
+		}
+		procedings += proc
+	}
+
+	return procedings, expenses, nil
+}
+
+// checkPadding adds 0 pading to single digit dates
+func checkPadding(day string) string {
+	parts := strings.Split(day, " ")
+	formatDay := parts[0] + " "
+	dates := strings.Split(parts[1], "/")
+	if len(dates[0]) < 2 {
+		formatDay += "0" + dates[0] + "/"
+	} else {
+		formatDay += dates[0] + "/"
+	}
+	if len(dates[1]) < 2 {
+		formatDay += "0" + dates[1]
+	} else {
+		formatDay += dates[1]
+	}
+	return formatDay
+}
