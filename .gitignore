@@ -18,8 +18,10 @@
 !README.md
 !LICENSE
 
-!/internal/
-!/internal/**/*
+!/internal/menu.go
+!/internal/operations.go
+!/internal/database/database.go
+!/internal/database/queries.sql
 
 !/cmd/
 !/cmd/**/*

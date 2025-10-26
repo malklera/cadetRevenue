@@ -4,49 +4,48 @@ package database
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 	_ "modernc.org/sqlite"
 	"time"
 )
 
 type Entry struct {
-	ID       int64
-	Date     time.Time
-	Canon    int
-	IncomeM  int
-	IncomeT  int
-	Expenses int
+	ID       int64     `db:"id"`
+	Date     time.Time `db:"date"`
+	Canon    int       `db:"canon"`
+	IncomeM  int       `db:"incomeM"`
+	IncomeT  int       `db:"incomeT"`
+	Expenses int       `db:"expenses"`
 }
 
-// OpenDB create a DB and set up a schema if needed, returns a context and db
-// to operate with, if there are error on the set-up it return it
-func OpenDB() (context.Context, *sql.DB, error) {
-	fileDB := "entries.db"
+const (
+	fileDB = "internal/database/entries.db"
+)
+
+// New create a DB and set up a schema if needed, returns db
+// to operate with, if there are error on the set-up it returns it
+func New() (*sql.DB, error) {
 	db, err := sql.Open("sqlite", fileDB)
 	if err != nil {
-		return nil, nil, err
+		return nil, fmt.Errorf("error on sql.Open(): %w", err)
 	}
-	defer func() {
-		closeErr := db.Close()
-		if closeErr != nil {
-			log.Printf("Error closing '%s' : %v", fileDB, closeErr)
-		}
-	}()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	if pingErr := db.PingContext(ctx); pingErr != nil {
-		return nil, nil, err
+		return nil, fmt.Errorf("error on db.PringContext(): %w", err)
 	}
-	if err = createSchema(ctx, db); err != nil {
-		return nil, nil, err
+
+	if err = createSchema(db); err != nil {
+		return nil, fmt.Errorf("error on createSchema(): %w", err)
 	}
-	return ctx, db, nil
+	return db, nil
 }
 
 // createSchema creates the base table if it do not exist
-func createSchema(ctx context.Context, db *sql.DB) error {
+func createSchema(db *sql.DB) error {
 	query := `
 	CREATE TABLE IF NOT EXISTS entry (
 		id INTEGER PRIMARY KEY,
@@ -54,18 +53,24 @@ func createSchema(ctx context.Context, db *sql.DB) error {
 		canon INTEGER NOT NULL,
 		incomeM INTEGER NOT NULL,
 		incomeT INTEGER NOT NULL,
-		expenses INTEGER NOT NULL,
+		expenses INTEGER NOT NULL
 	);`
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	_, err := db.ExecContext(ctx, query)
 	return err
 }
 
 // AddEntry accept an [database.Entry] and insert it to the given DB
-func AddEntry(ctx context.Context, db *sql.DB, entry Entry) error {
+func AddEntry(db *sql.DB, entry Entry) error {
 	query := `
 	INSERT INTO entry (
 		date, canon, incomeM, incomeT, expenses) VALUES (?, ?, ?, ?, ?);`
-	_, err := db.ExecContext(ctx, query, entry.Date, entry.Canon,
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	dateStr := entry.Date.Format(time.DateTime)
+	_, err := db.ExecContext(ctx, query, dateStr, entry.Canon,
 		entry.IncomeM, entry.IncomeT, entry.Expenses)
 	if err != nil {
 		return err
@@ -74,11 +79,14 @@ func AddEntry(ctx context.Context, db *sql.DB, entry Entry) error {
 }
 
 // ShowAll is a temporary function that returns all entries of the DB
-func ShowAll(ctx context.Context, db *sql.DB) ([]Entry, error) {
+func ShowAll(db *sql.DB) ([]Entry, error) {
 	var entries []Entry
 	query := `
 	SELECT id, date, canon, incomeM, incomeT, expenses
 	FROM entry;`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
 	rows, err := db.QueryContext(ctx, query)
 	if err != nil {
@@ -88,8 +96,15 @@ func ShowAll(ctx context.Context, db *sql.DB) ([]Entry, error) {
 
 	for rows.Next() {
 		var entry Entry
-		if err := rows.Scan(&entry.ID, &entry.Date, &entry.Canon, &entry.IncomeM, &entry.IncomeT, &entry.Expenses); err != nil {
+		dateStr := ""
+		if err := rows.Scan(&entry.ID, &dateStr, &entry.Canon, &entry.IncomeM, &entry.IncomeT, &entry.Expenses); err != nil {
 			return nil, err
+		}
+		tempDate, err := time.Parse(time.DateTime, dateStr)
+		if err != nil {
+			log.Printf("error parsing date '%s' of row '%d'", dateStr, entry.ID)
+		} else {
+			entry.Date = tempDate
 		}
 		entries = append(entries, entry)
 	}

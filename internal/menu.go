@@ -3,6 +3,7 @@ package internal
 
 import (
 	"bufio"
+	"cadetRevenue/internal/database"
 	"fmt"
 	"log"
 	"os"
@@ -68,9 +69,35 @@ func Menu() {
 				for _, e := range entry {
 					fmt.Println("date:", e.Date)
 				}
-
+				dbInstance, err := database.New()
+				defer dbInstance.Close()
+				if err != nil {
+					log.Printf("error opening the database: %v", err)
+				} else {
+					for _, e := range entry {
+						if err := database.AddEntry(dbInstance, e); err != nil {
+							log.Println("error adding entry:")
+							log.Println(e)
+							log.Println(err)
+						}
+					}
+				}
 			case "3":
 				fmt.Println("call showMenu()")
+				dbInstance, err := database.New()
+				defer dbInstance.Close()
+				if err != nil {
+					log.Printf("error opening the database: %v", err)
+				} else {
+					entries, err := database.ShowAll(dbInstance)
+					if err != nil {
+						log.Printf("error on ShowAll: %v", err)
+					} else {
+						for _, entry := range entries {
+							fmt.Println(entry)
+						}
+					}
+				}
 			case "4":
 				innerFor := true
 				for innerFor {
