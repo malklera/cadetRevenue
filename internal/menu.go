@@ -94,20 +94,7 @@ func Menu() {
 					log.Printf("error listing files: %v\n", err)
 				}
 			case "3":
-				dbInstance, err := database.New()
-				defer dbInstance.Close()
-				if err != nil {
-					log.Printf("error opening the database: %v", err)
-				} else {
-					entries, err := database.ShowAll(dbInstance)
-					if err != nil {
-						log.Printf("error on ShowAll: %v", err)
-					} else {
-						for _, entry := range entries {
-							fmt.Println(entry)
-						}
-					}
-				}
+				showOptions()
 			case "4":
 				innerFor := true
 				for innerFor {
@@ -128,6 +115,97 @@ func Menu() {
 						}
 					}
 				}
+			default:
+				fmt.Printf("'%s' is an invalid option.\n", opt)
+			}
+		}
+	}
+}
+
+// showOptions allows you to choose between different queries to run
+func showOptions() {
+	// options are all months of a year on chronological order, showing the net profit
+	// of each month
+	// or choose a year and month and show that one
+	// or show all entries(leave the ShowAll() for now
+	for {
+		fmt.Println()
+		fmt.Println("What to show")
+		fmt.Println("1- All months")
+		fmt.Println("2- A specific month")
+		fmt.Println("3- All entries")
+		fmt.Println("4- Exit")
+		fmt.Print("> ")
+
+		opt, err := reader.ReadString('\n')
+		if err != nil {
+			log.Printf("error reading input: %v\n", err)
+		} else {
+			opt = strings.TrimSpace(opt)
+			switch opt {
+			case "1":
+			case "2":
+				dbInstance, err := database.New()
+				if err != nil {
+					log.Printf("error opening the database: %v", err)
+				} else {
+					defer dbInstance.Close()
+					years, err := database.GetYears(dbInstance)
+					if err != nil {
+						log.Printf("error geting the available years: %v\n", err)
+					} else {
+						for {
+							fmt.Println()
+							fmt.Println("The available years are:")
+							for _, y := range years {
+								fmt.Println(y)
+							}
+							fmt.Println()
+							fmt.Println("Choose a year (input the year as displayed)")
+							fmt.Println("Input 'q' to exit")
+							fmt.Print(">")
+							opt2, err := reader.ReadString('\n')
+							if err != nil {
+								log.Printf("error reading input: %v\n", err)
+							} else {
+								opt2 = strings.TrimSpace(opt2)
+								if opt2 == "q" {
+									// WARN: test this
+									break
+								} else {
+									valid := false
+									for _, y := range years {
+										if y == opt2 {
+											valid = true
+										}
+									}
+									if valid {
+										// TODO: here ask for the month
+									} else {
+										fmt.Printf("'%s' is an invalid option\n", opt2)
+									}
+								}
+							}
+						}
+					}
+				}
+			case "3":
+				dbInstance, err := database.New()
+				if err != nil {
+					log.Printf("error opening the database: %v", err)
+				} else {
+					defer dbInstance.Close()
+					entries, err := database.ShowAll(dbInstance)
+					if err != nil {
+						log.Printf("error on ShowAll: %v", err)
+					} else {
+						for _, entry := range entries {
+							fmt.Println(entry)
+						}
+					}
+				}
+			case "4":
+				return
 			default:
 				fmt.Printf("'%s' is an invalid option.\n", opt)
 			}

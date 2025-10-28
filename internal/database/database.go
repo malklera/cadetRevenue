@@ -114,3 +114,33 @@ func ShowAll(db *sql.DB) ([]Entry, error) {
 	}
 	return entries, nil
 }
+
+// GetYears return all available years on the database
+func GetYears(db *sql.DB) ([]string, error) {
+	query := `
+		select distinct strftime('%Y', date)
+		from entry
+		order by date;`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	rows, err := db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var years []string
+	for rows.Next() {
+		year := ""
+		if err := rows.Scan(&year); err != nil {
+			return nil, err
+		}
+		years = append(years, year)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return years, nil
+}
