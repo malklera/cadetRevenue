@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -57,33 +58,42 @@ func Menu() {
 					log.Printf("error listing files: %v\n", err)
 				}
 			case "2":
-				// TODO: here goes the procesing of formated notes
-				// extract data
-				// put data on the db
-				entry, err := processNote("abril-1-2024.txt")
-				if err != nil {
-					fmt.Println("err:", err)
-				}
-				fmt.Println(entry)
-				fmt.Println()
-				for _, e := range entry {
-					fmt.Println("date:", e.Date)
-				}
-				dbInstance, err := database.New()
-				defer dbInstance.Close()
-				if err != nil {
-					log.Printf("error opening the database: %v", err)
-				} else {
-					for _, e := range entry {
-						if err := database.AddEntry(dbInstance, e); err != nil {
-							log.Println("error adding entry:")
-							log.Println(e)
-							log.Println(err)
+				listNotes, err := listFiles(formatedDir)
+				switch err {
+				case nil:
+					for n := range listNotes {
+						entry, err := processNote(listNotes[n])
+						if err != nil {
+							log.Printf("error processing note '%s' : %v", listNotes[n], err)
+						} else {
+							dbInstance, err := database.New()
+							moveFile := false
+							if err != nil {
+								log.Printf("error opening the database: %v", err)
+							} else {
+								defer dbInstance.Close()
+								for _, e := range entry {
+									if err := database.AddEntry(dbInstance, e); err != nil {
+										log.Printf("error adding entry '%v' to the database: %v", e.Date, err)
+									} else {
+										moveFile = true
+									}
+								}
+							}
+							// move the file from formated to processed
+							if moveFile {
+								if err := os.Rename(filepath.Join(formatedDir, listNotes[n]), filepath.Join(processedDir, listNotes[n])); err != nil {
+									log.Printf("error moving formated note to the processed directory: %v", err)
+								}
+							}
 						}
 					}
+				case errNoFiles:
+					fmt.Println("There are no files to process")
+				default:
+					log.Printf("error listing files: %v\n", err)
 				}
 			case "3":
-				fmt.Println("call showMenu()")
 				dbInstance, err := database.New()
 				defer dbInstance.Close()
 				if err != nil {

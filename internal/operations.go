@@ -670,18 +670,12 @@ func processNote(nameNote string) ([]database.Entry, error) {
 			return nil, fmt.Errorf("line '%s' of file '%s' has the wrong format", content[n], nameNote)
 		}
 	}
-	fmt.Println(entries)
 	return entries, nil
 }
 
 // processProcedings take in a valid string of procedingsRe, returns income,
 // expenses, error
 func processProcedings(content string) (int, int, error) {
-	// T: 3000+2500-3300
-	// M:-4500
-	// M:3000-4500
-	// T:2000+2000
-	// M:2000
 	line := strings.Split(content, ":")
 	lineP := strings.TrimSpace(line[1])
 
