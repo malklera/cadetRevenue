@@ -144,3 +144,38 @@ func GetYears(db *sql.DB) ([]string, error) {
 	}
 	return years, nil
 }
+
+// GetMonths return all available months of a given year
+func GetMonths(db *sql.DB, year string) ([]string, error) {
+	// WARN: erase this print
+	fmt.Println("year:", year)
+	query := `
+		select distinct strftime('%m', date)
+		from entry
+		where strftime('%Y', date) = ?
+		order by date;`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	rows, err := db.QueryContext(ctx, query, year)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var months []string
+	for rows.Next() {
+		month := ""
+		if err := rows.Scan(&month); err != nil {
+			return nil, err
+		}
+		// WARN: erase this print
+		fmt.Println("month:", month)
+		months = append(months, month)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return months, nil
+}

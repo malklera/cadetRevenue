@@ -32,7 +32,7 @@ order by date;
 -- all months of the given year
 select distinct strftime('%m', date)
 from entry
-where strftime('%Y', date) = '2024'
+where strftime('%Y', date) = '?'
 order by date;
 
 -- all entries of a given month

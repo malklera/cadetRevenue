@@ -163,26 +163,70 @@ func showOptions() {
 							fmt.Println()
 							fmt.Println("Choose a year (input the year as displayed)")
 							fmt.Println("Input 'q' to exit")
-							fmt.Print(">")
-							opt2, err := reader.ReadString('\n')
+							fmt.Print("> ")
+							optY, err := reader.ReadString('\n')
 							if err != nil {
 								log.Printf("error reading input: %v\n", err)
 							} else {
-								opt2 = strings.TrimSpace(opt2)
-								if opt2 == "q" {
+								optY = strings.TrimSpace(optY)
+								if optY == "q" {
 									// WARN: test this
 									break
 								} else {
 									valid := false
 									for _, y := range years {
-										if y == opt2 {
+										if y == optY {
 											valid = true
 										}
 									}
 									if valid {
 										// TODO: here ask for the month
+										
+										// WARN: erase this print
+										fmt.Println("optY", optY)
+										months, err := database.GetMonths(dbInstance, optY)
+										if err != nil {
+											log.Printf("error geting the available months for year '%s': %v\n", optY, err)
+										} else {
+											for {
+												fmt.Println()
+												fmt.Println("The available months are:")
+												// WARN: erase this print
+												fmt.Println(months)
+												for _, m := range months {
+													fmt.Println(m)
+												}
+												fmt.Println()
+												fmt.Println("Choose a month (input the month as displayed)")
+												fmt.Println("Input 'q' to exit")
+												fmt.Print("> ")
+												optM, err := reader.ReadString('\n')
+												if err != nil {
+													log.Printf("error reading input: %v\n", err)
+												} else {
+													optM = strings.TrimSpace(optM)
+													if optM == "q" {
+														// WARN: test this
+														break
+													} else {
+														valid := false
+														for _, m := range months {
+															if m == optY {
+																valid = true
+															}
+														}
+														if valid {
+															// TODO: here display the information
+															fmt.Println("Show the net profit of the month")
+														} else {
+															fmt.Printf("'%s' is an invalid option\n", optM)
+														}
+													}
+												}
+											}
+										}
 									} else {
-										fmt.Printf("'%s' is an invalid option\n", opt2)
+										fmt.Printf("'%s' is an invalid option\n", optY)
 									}
 								}
 							}
