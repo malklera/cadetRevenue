@@ -36,8 +36,7 @@ where strftime('%Y', date) = '?'
 order by date;
 
 -- all entries of a given month
-select distinct *
-from entry
-where strftime('%m', date) = '01'
-order by date;
-
+SELECT DISTINCT *
+FROM entry
+WHERE strftime('%Y', date) = ? AND strftime('%m', date) = ?
+ORDER BY date;

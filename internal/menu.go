@@ -170,7 +170,6 @@ func showOptions() {
 							} else {
 								optY = strings.TrimSpace(optY)
 								if optY == "q" {
-									// WARN: test this
 									break
 								} else {
 									valid := false
@@ -180,10 +179,6 @@ func showOptions() {
 										}
 									}
 									if valid {
-										// TODO: here ask for the month
-										
-										// WARN: erase this print
-										fmt.Println("optY", optY)
 										months, err := database.GetMonths(dbInstance, optY)
 										if err != nil {
 											log.Printf("error geting the available months for year '%s': %v\n", optY, err)
@@ -191,8 +186,6 @@ func showOptions() {
 											for {
 												fmt.Println()
 												fmt.Println("The available months are:")
-												// WARN: erase this print
-												fmt.Println(months)
 												for _, m := range months {
 													fmt.Println(m)
 												}
@@ -206,18 +199,25 @@ func showOptions() {
 												} else {
 													optM = strings.TrimSpace(optM)
 													if optM == "q" {
-														// WARN: test this
 														break
 													} else {
 														valid := false
 														for _, m := range months {
-															if m == optY {
+															if m == optM {
 																valid = true
 															}
 														}
 														if valid {
 															// TODO: here display the information
 															fmt.Println("Show the net profit of the month")
+															entries, err := database.GetEntries(dbInstance, optY, optM)
+															if err != nil {
+																log.Printf("error getting the entries for year '%s' month '%s': %v\n", optY, optM, err)
+															} else {
+																// TODO: do the actual calculation of profit of each day and sum them
+																// TODO: check if the month has entries for all the working days
+																fmt.Println(entries)
+															}
 														} else {
 															fmt.Printf("'%s' is an invalid option\n", optM)
 														}

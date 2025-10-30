@@ -80,7 +80,6 @@ func AddEntry(db *sql.DB, entry Entry) error {
 
 // ShowAll is a temporary function that returns all entries of the DB
 func ShowAll(db *sql.DB) ([]Entry, error) {
-	var entries []Entry
 	query := `
 	SELECT id, date, canon, incomeM, incomeT, expenses
 	FROM entry;`
@@ -94,6 +93,7 @@ func ShowAll(db *sql.DB) ([]Entry, error) {
 	}
 	defer rows.Close()
 
+	var entries []Entry
 	for rows.Next() {
 		var entry Entry
 		dateStr := ""
@@ -118,9 +118,9 @@ func ShowAll(db *sql.DB) ([]Entry, error) {
 // GetYears return all available years on the database
 func GetYears(db *sql.DB) ([]string, error) {
 	query := `
-		select distinct strftime('%Y', date)
-		from entry
-		order by date;`
+		SELECT DISTINCT strftime('%Y', date)
+		FROM entry
+		ORDER BY date;`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -147,13 +147,11 @@ func GetYears(db *sql.DB) ([]string, error) {
 
 // GetMonths return all available months of a given year
 func GetMonths(db *sql.DB, year string) ([]string, error) {
-	// WARN: erase this print
-	fmt.Println("year:", year)
 	query := `
-		select distinct strftime('%m', date)
-		from entry
-		where strftime('%Y', date) = ?
-		order by date;`
+		SELECT DISTINCT strftime('%m', date)
+		FROM entry
+		WHERE strftime('%Y', date) = ?
+		ORDER BY date;`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -170,12 +168,48 @@ func GetMonths(db *sql.DB, year string) ([]string, error) {
 		if err := rows.Scan(&month); err != nil {
 			return nil, err
 		}
-		// WARN: erase this print
-		fmt.Println("month:", month)
 		months = append(months, month)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 	return months, nil
+}
+
+// GetEntries return all entries of a given year-month
+func GetEntries(db *sql.DB, year string, month string) ([]Entry, error) {
+	query := `
+		SELECT DISTINCT  id, date, canon, incomeM, incomeT, expenses
+		FROM entry
+		WHERE strftime('%Y', date) = ? AND strftime('%m', date) = ?
+		ORDER BY date;`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	rows, err := db.QueryContext(ctx, query, year, month)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var entries []Entry
+	for rows.Next() {
+		var entry Entry
+		dateStr := ""
+		if err := rows.Scan(&entry.ID, &dateStr, &entry.Canon, &entry.IncomeM, &entry.IncomeT, &entry.Expenses); err != nil {
+			return nil, err
+		}
+		tempDate, err := time.Parse(time.DateTime, dateStr)
+		if err != nil {
+			log.Printf("error parsing date '%s' of row '%d'", dateStr, entry.ID)
+		} else {
+			entry.Date = tempDate
+		}
+		entries = append(entries, entry)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return entries, nil
 }
