@@ -734,3 +734,19 @@ func checkPadding(day string) string {
 	}
 	return formatDay
 }
+
+// netRevenue takes a []Entry and return the total net revenue, if i want to use
+// it for a single day, just pass a slice of one element
+func netRevenue(entries []database.Entry) int {
+	total := 0
+	for _, entry := range entries {
+		subTotal := entry.IncomeM + entry.IncomeT
+		if subTotal > (entry.Canon * 4) {
+			subTotal -= entry.Canon
+		} else {
+			subTotal -= subTotal / 4
+		}
+		total += subTotal - entry.Expenses
+	}
+	return total
+}

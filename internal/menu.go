@@ -144,6 +144,8 @@ func showOptions() {
 			opt = strings.TrimSpace(opt)
 			switch opt {
 			case "1":
+				// TODO: show the same format as in specific month, but do not ask
+				// for user input about which ones, just show all available
 			case "2":
 				dbInstance, err := database.New()
 				if err != nil {
@@ -208,15 +210,13 @@ func showOptions() {
 															}
 														}
 														if valid {
-															// TODO: here display the information
-															fmt.Println("Show the net profit of the month")
 															entries, err := database.GetEntries(dbInstance, optY, optM)
 															if err != nil {
 																log.Printf("error getting the entries for year '%s' month '%s': %v\n", optY, optM, err)
 															} else {
-																// TODO: do the actual calculation of profit of each day and sum them
 																// TODO: check if the month has entries for all the working days
-																fmt.Println(entries)
+																fmt.Println("Date	- Net profit")
+																fmt.Printf("%s-%s	- $ %d\n", optY, optM, netRevenue(entries))
 															}
 														} else {
 															fmt.Printf("'%s' is an invalid option\n", optM)
