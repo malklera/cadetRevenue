@@ -16,14 +16,6 @@ INSERT INTO entry (
 SELECT id, date, canon, incomeM, incomeT, expenses
 FROM entry;
 
--- return a year-month and the net profit
--- select e1.id, e1.strftime('%Y %m', e1.date), e1.canon, () as netRevenue
--- from entry as e1;
-
-select *
-from entry
-where strftime('%Y', date) = '2025';
-
 -- what years are available
 select distinct strftime('%Y', date)
 from entry

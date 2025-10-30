@@ -111,25 +111,27 @@ Row: id, year int, month int, day int, canon int, income int, expenses int
 
 [x] Change the formating to add a T:0 to sabado, otherwise it will complicate the data extraction
 
-[ ] Change the formating to add 0 padding to dates
+[x] Change the formating to add 0 padding to dates
 
-[ ] Create a function to extract data from correctly formated notes, and put it on the DB
+[x] Create a function to extract data from correctly formated notes, and put it on the DB
 
-[ ] Create the DB schema and a initial selection of functions to interface with it, create table, input data, get data out?? think about this one more
+[x] Create the DB schema and a initial selection of functions to interface with it, create table, input data, get data out?? think about this one more
 
 [ ] Ensure data for a specific day is unique, I copied the content of abril-4-2024.txt to abril-5-2024.txt to test
 
-[ ] Move processed notes to the proceseed/ directory
+[x] Move processed notes to the proceseed/ directory
 
-[ ] Do some calculations for my notes, like getting a net profict daily
+[x] Do some calculations for my notes, like getting a net profict daily
 
-[ ] Make something for the Show menu, i have to think about what i care about
+[x] Make something for the Show menu, i have to think about what i care about
 
-[ ] Check all TODO and NOTE on the project and dealt with them
+[x] Check all TODO and NOTE on the project and dealt with them
 
 [ ] For now the used directories have to be created manually
 
 [ ] If a procedings gets cut by an accidental new line i will have to manually modify the file
+
+[ ] For now, this will be the state of it, it do what i want, need to study other things for now
 
 ```
 M:2000+3000+
