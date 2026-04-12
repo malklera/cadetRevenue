@@ -119,11 +119,11 @@ Row: id, year int, month int, day int, canon int, income int, expenses int
 
 [ ] Ensure data for a specific day is unique, I copied the content of abril-4-2024.txt to abril-5-2024.txt to test
 
-[x] Move processed notes to the proceseed/ directory
+[x] Move processed notes to the processed/ directory
 
 [x] Do some calculations for my notes, like getting a net profict daily
 
-[x] Make something for the Show menu, i have to think about what i care about
+[x] Make something for the Show menu, I have to think about what I care about
 
 [x] Check all TODO and NOTE on the project and dealt with them
 
