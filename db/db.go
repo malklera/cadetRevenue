@@ -1,8 +1,9 @@
-// Package database contains the struct and functions to interact with the database
-package database
+// Package db contains the struct and functions to interact with the database
+package db
 
 import (
 	"context"
+	"path/filepath"
 	"database/sql"
 	"fmt"
 	"log"
@@ -19,27 +20,23 @@ type Entry struct {
 	Expenses int       `db:"expenses"`
 }
 
-const (
-	fileDB = "internal/database/entries.db"
-)
-
-// New create a DB and set up a schema if needed, returns db
+// New create a DB at target and set up a schema if needed, returns a db
 // to operate with, if there are error on the set-up it returns it
-func New() (*sql.DB, error) {
-	db, err := sql.Open("sqlite", fileDB)
+func New(target string) (*sql.DB, error) {
+	db, err := sql.Open("sqlite", filepath.Join(target, "entries.db"))
 	if err != nil {
-		return nil, fmt.Errorf("error on sql.Open(): %w", err)
+		return nil, fmt.Errorf(" > sql.Open(): %w", err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	if pingErr := db.PingContext(ctx); pingErr != nil {
-		return nil, fmt.Errorf("error on db.PringContext(): %w", err)
+		return nil, fmt.Errorf(" > db.PringContext(): %w", err)
 	}
 
 	if err = createSchema(db); err != nil {
-		return nil, fmt.Errorf("error on createSchema(): %w", err)
+		return nil, fmt.Errorf(" > createSchema(): %w", err)
 	}
 	return db, nil
 }

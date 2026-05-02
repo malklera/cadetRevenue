@@ -1,10 +1,10 @@
 # Cadet revenue calculator
 
-Allow to download a note with the differents shipments and calculate how much do you made.
+Allow to download a note with the different shipments and calculate how much do you made.
 
 I have my notes across the working day on Google Keep note taking app on my cellphone, you have to manually create a text file with the correct name, then copy into it the content of the note.
 
-I saw something about hiting the google api, but is too complicate for me at this moment.
+I saw something about hitting the google API, but is too complicate for me at this moment.
 
 ## Format
 
@@ -12,7 +12,7 @@ The note has to be a text file, with the following format, before processing the
 
 
 Name file: month-\[number of notes of this month\]-year.txt
-Where year is the four digit numerical representation, month is the word on english
+Where year is the four digit numerical representation, month is the word on English
 
 First line: Canon<space>int
 
@@ -59,8 +59,9 @@ Menu that ask
 - select next file, repeat previous three steps
 
 checkFormat: 
-- check it for the correct format, if something wrong, open it with $EDITOR and tell the user where the error is
-- after the user exit editor, execute previous step
+- check it for the correct format, if something wrong, present a input field prefilled
+with the wrong content and let the user change it.
+- Check the corrected input from the user.
 
 processFile:
 - read whole file into a list where each item is a line of the file
@@ -77,6 +78,20 @@ Row: id, year int, month int, day int, canon int, income int, expenses int
 (year, month, day) is unique
 
 ## Structure of the program
+
+It is a CLI with the following flags available.
+
+`-format` `-f`
+    Ensure the files in `originals` are correctly formatted, if wrong, point out
+    the error and prompt the user into correcting it.
+
+`-process` `-p`
+    Retrieve all data from files in `originals` and save them to the db, move the
+    successfully processed files into `processed`, skip and return error if any
+    file is not the correct format, continue with the rest of files.
+
+`-`
+
 
 - A main function from where it calls the main menu
 

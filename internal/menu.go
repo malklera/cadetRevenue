@@ -3,7 +3,7 @@ package internal
 
 import (
 	"bufio"
-	"cadetRevenue/internal/database"
+	"cadetRevenue/db"
 	"fmt"
 	"log"
 	"os"
@@ -66,14 +66,14 @@ func Menu() {
 						if err != nil {
 							log.Printf("error processing note '%s' : %v", listNotes[n], err)
 						} else {
-							dbInstance, err := database.New()
+							dbInstance, err := db.New()
 							moveFile := false
 							if err != nil {
 								log.Printf("error opening the database: %v", err)
 							} else {
 								defer dbInstance.Close()
 								for _, e := range entry {
-									if err := database.AddEntry(dbInstance, e); err != nil {
+									if err := db.AddEntry(dbInstance, e); err != nil {
 										log.Printf("error adding entry '%v' to the database: %v", e.Date, err)
 									} else {
 										moveFile = true
@@ -147,12 +147,12 @@ func showOptions() {
 				// TODO: show the same format as in specific month, but do not ask
 				// for user input about which ones, just show all available
 			case "2":
-				dbInstance, err := database.New()
+				dbInstance, err := db.New()
 				if err != nil {
 					log.Printf("error opening the database: %v", err)
 				} else {
 					defer dbInstance.Close()
-					years, err := database.GetYears(dbInstance)
+					years, err := db.GetYears(dbInstance)
 					if err != nil {
 						log.Printf("error geting the available years: %v\n", err)
 					} else {
@@ -181,7 +181,7 @@ func showOptions() {
 										}
 									}
 									if valid {
-										months, err := database.GetMonths(dbInstance, optY)
+										months, err := db.GetMonths(dbInstance, optY)
 										if err != nil {
 											log.Printf("error geting the available months for year '%s': %v\n", optY, err)
 										} else {
@@ -210,7 +210,7 @@ func showOptions() {
 															}
 														}
 														if valid {
-															entries, err := database.GetEntries(dbInstance, optY, optM)
+															entries, err := db.GetEntries(dbInstance, optY, optM)
 															if err != nil {
 																log.Printf("error getting the entries for year '%s' month '%s': %v\n", optY, optM, err)
 															} else {
@@ -234,12 +234,12 @@ func showOptions() {
 					}
 				}
 			case "3":
-				dbInstance, err := database.New()
+				dbInstance, err := db.New()
 				if err != nil {
 					log.Printf("error opening the database: %v", err)
 				} else {
 					defer dbInstance.Close()
-					entries, err := database.ShowAll(dbInstance)
+					entries, err := db.ShowAll(dbInstance)
 					if err != nil {
 						log.Printf("error on ShowAll: %v", err)
 					} else {
