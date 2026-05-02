@@ -81,9 +81,15 @@ func main() {
 		switch f := fn.Name; f {
 		case "setup":
 			flagPassed["setup"] = true
+		case "s":
+			flagPassed["setup"] = true
 		case "format":
 			flagPassed["format"] = true
+		case "f":
+			flagPassed["format"] = true
 		case "process":
+			flagPassed["process"] = true
+		case "p":
 			flagPassed["process"] = true
 		default:
 			break
@@ -96,8 +102,6 @@ func main() {
 
 	// format and process can be together, format has to run first
 
-	fmt.Println("flagPassed[setUp]:", flagPassed["setUp"])
-
 	switch {
 	case flagPassed["setup"]:
 		if flagPassed["format"] || flagPassed["process"] {
@@ -105,19 +109,21 @@ func main() {
 			flag.Usage()
 			os.Exit(1)
 		}
-		// call a func to created the needed directories and the db.
+
 		targetDir, err := createEnv(setUp)
 		if err != nil {
 			fmt.Printf("Error creating the environment : %v", err)
 			os.Exit(1)
 		}
+
 		_, err = db.New(targetDir)
 		if err != nil {
 			fmt.Printf("Error creating the database : %v", err)
 			os.Exit(1)
 		}
-		fmt.Println("Setup succefull.")
-	case format:
+
+		fmt.Println("Setup succesfull.")
+	case flagPassed["format"]:
 		notes, err := listFiles(originalsDir)
 		switch err {
 		case nil:
@@ -140,48 +146,51 @@ func main() {
 					log.Printf("error checking the name of '%s' : %v\n", note, err)
 				}
 			}
+			if flagPassed["process"] {
+				// process notes here
+			}
 		case errNoFiles:
 			fmt.Println("There are no files to format.")
 			os.Exit(0)
 		default:
 			log.Printf("error listFiles(%s) : %v\n", originalsDir, err)
 		}
-	case process:
-		// listNotes, err := listFiles(formatedDir)
-		// switch err {
-		// case nil:
-		// 	for n := range listNotes {
-		// 		entry, err := processNote(listNotes[n])
-		// 		if err != nil {
-		// 			log.Printf("error processing note '%s' : %v", listNotes[n], err)
-		// 		} else {
-		// 			dbInstance, err := db.New()
-		// 			moveFile := false
-		// 			if err != nil {
-		// 				log.Printf("error opening the database: %v", err)
-		// 			} else {
-		// 				defer dbInstance.Close()
-		// 				for _, e := range entry {
-		// 					if err := db.AddEntry(dbInstance, e); err != nil {
-		// 						log.Printf("error adding entry '%v' to the database: %v", e.Date, err)
-		// 					} else {
-		// 						moveFile = true
-		// 					}
-		// 				}
-		// 			}
-		// 			// move the file from formated to processed
-		// 			if moveFile {
-		// 				if err := os.Rename(filepath.Join(formatedDir, listNotes[n]), filepath.Join(processedDir, listNotes[n])); err != nil {
-		// 					log.Printf("error moving formated note to the processed directory: %v", err)
-		// 				}
-		// 			}
-		// 		}
-		// 	}
-		// case errNoFiles:
-		// 	fmt.Println("There are no files to process")
-		// default:
-		// 	log.Printf("error listing files: %v\n", err)
-		// }
+	case flagPassed["process"]:
+		listNotes, err := listFiles(formatedDir)
+		switch err {
+		case nil:
+			for n := range listNotes {
+				entry, err := processNote(listNotes[n])
+				if err != nil {
+					log.Printf("error processing note '%s' : %v", listNotes[n], err)
+				} else {
+					dbInstance, err := db.New("")
+					moveFile := false
+					if err != nil {
+						log.Printf("error opening the database: %v", err)
+					} else {
+						defer dbInstance.Close()
+						for _, e := range entry {
+							if err := db.AddEntry(dbInstance, e); err != nil {
+								log.Printf("error adding entry '%v' to the database: %v", e.Date, err)
+							} else {
+								moveFile = true
+							}
+						}
+					}
+					// move the file from formated to processed
+					if moveFile {
+						if err := os.Rename(filepath.Join(formatedDir, listNotes[n]), filepath.Join(processedDir, listNotes[n])); err != nil {
+							log.Printf("error moving formated note to the processed directory: %v", err)
+						}
+					}
+				}
+			}
+		case errNoFiles:
+			fmt.Println("There are no files to process")
+		default:
+			log.Printf("error listing files: %v\n", err)
+		}
 	default:
 		log.Fatalf("Invalid flag.")
 	}
