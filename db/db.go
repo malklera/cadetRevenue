@@ -21,7 +21,7 @@ type Entry struct {
 }
 
 // New create a DB at target and set up a schema if needed, returns a db
-// to operate with, if there are error on the set-up it returns it
+// to operate with
 func New(target string) (*sql.DB, error) {
 	db, err := sql.Open("sqlite", filepath.Join(target, "entries.db"))
 	if err != nil {

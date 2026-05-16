@@ -148,6 +148,44 @@ It is a CLI with the following flags available.
 
 [ ] For now, this will be the state of it, it do what i want, need to study other things for now
 
+# TODO v2
+
+[x] Change the shape of the cli, setup, show, format, process, will be subcommands.
+
+[x] Fix the help messages.
+
+[x] Think if the subcommands should be flagsets or not.
+
+[ ] Update regex, 'T: ' has to be valid, just add a 0 automatically.
+
+[ ] Update regex, 't: - 4000' has to be valid, just add delete the spaces automatically.
+
+[ ] Update regex, 'm:2000+2200+2500+1600+2700-' has to be valid, just delete the unused symbol either + or -
+
+[ ] Update regex, 'm:2000+2500+2500+2000+2000+6800+2000+2000+2000++4000+6000' has to be valid, just delete the extra symbol if they are the same, ++ or --,
+it is an error if +- or -+
+
+[ ] Think about this, 'm:-200+1600+2600+800+800+1000+1500' is a negative valid if
+it is not the last element?
+
+[ ] Check how the db works, need to rework it, for now, leave it as is.
+
+[x] Think which flags are global(target) and belong to a subcommand. show(year, month, day)
+
+[ ] Change the name of the originals files, to year-month-n.txt, try to see how
+they get sorted.
+
+[ ] Update all errors to a uniform format.
+
+[ ] Ensure data for each day is unique in the database.
+
+[ ] Replace the use of strings.Split()
+
+[ ] Change switch to use || for all that have a equal action
+
+[ ] I think when i modify a line in the last line, like 'sabado ... m:' i do not
+add the needed 't:0' below.
+
 ```
 M:2000+3000+
 4000
@@ -155,6 +193,21 @@ M:2000+3000+
 
 
 ## Test cases
+
+Files to copy from backup/ to test
+cp backup/febrero-*-2026.txt test-13-05/originals
+
+For format with errors
+cp backup/agosto-1-2-2024.txt test-13-05/originals
+cp backup/diciembre-2-2024.txt test-13-05/originals
+cp backup/enero-2-2026.txt test-13-05/originals
+cp backup/enero-4-2024.txt test-13-05/originals
+cp backup/noviembre-4-2024.txt test-13-05/originals
+cp backup/septiembre-4-2025.txt test-13-05/originals
+cp backup/abril-1-2024.txt test-13-05/originals
+cp backup/ test-13-05/originals
+cp backup/ test-13-05/originals
+
 
 ### For checkFileName()
 
@@ -407,7 +460,8 @@ M:2000+2500+4500+4500+4000-2000
 
 ```
 
-Error on Miercoles
+Error on Miércoles
+
 ```
 
 Canon 7000
