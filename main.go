@@ -294,7 +294,7 @@ func formatNote(nameNote string) error {
 		fmt.Printf("'%s' is empty\n", nameNote)
 		return errSkipNote
 	}
-	// TODO: repalce this for another thing
+	// TODO: replace this for another thing
 	content := strings.Split(strings.ToLower(string(data)), "\n")
 
 	// the .Split leave me with a final empty string element
@@ -389,46 +389,12 @@ func formatNote(nameNote string) error {
 			switch {
 			case n+1 == len(content):
 				newContent, _ = strings.CutSuffix(newContent, "\n")
-			// TODO: unify this cases in one with ||
-			case canonRe.MatchString(content[n+1]):
-				break
-			case dayNoWorkRe.MatchString(content[n+1]):
-				break
-			case dayWorkRe.MatchString(content[n+1]):
-				break
-			case dayWorkCanonRe.MatchString(content[n+1]):
+			case canonRe.MatchString(content[n+1]) || dayNoWorkRe.MatchString(content[n+1]) ||
+				dayWorkRe.MatchString(content[n+1]) || dayWorkCanonRe.MatchString(content[n+1]):
 				break
 			default:
 				// error, the next line is invalid
-				proceed := true
-				for proceed {
-					fmt.Println()
-					fmt.Println("File:", nameNote)
-					fmt.Println("Current line:")
-					fmt.Println(content[n])
-					fmt.Println("The line below is invalid")
-					fmt.Println(content[n+1])
-					fmt.Println("Choose what to do")
-					fmt.Println("1- Erase line")
-					fmt.Println("2- Leave it(will be prompted to modify it later)")
-					fmt.Print("> ")
-					opt, err := reader.ReadString('\n')
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "error reading input: %v\n", err)
-					} else {
-						opt = strings.TrimSpace(opt)
-						switch opt {
-						case "1":
-							// Advance the counter, jump over the next line
-							n++
-							proceed = false
-						case "2":
-							proceed = false
-						default:
-							fmt.Printf("'%s' is an invalid option.\n", opt)
-						}
-					}
-				}
+				n = n + nextLineInvalid(nameNote, content[n], content[n+1])
 			}
 			n++
 		case dayWorkRe.MatchString(content[n]):
@@ -446,35 +412,7 @@ func formatNote(nameNote string) error {
 				break
 			default:
 				// error, the next line is invalid
-				proceed := true
-				for proceed {
-					fmt.Println()
-					fmt.Println("File:", nameNote)
-					fmt.Println("Current line:")
-					fmt.Println(content[n])
-					fmt.Println("The line below is invalid")
-					fmt.Println(content[n+1])
-					fmt.Println("Choose what to do")
-					fmt.Println("1- Erase line")
-					fmt.Println("2- Leave it(will be prompted to modify it later)")
-					fmt.Print("> ")
-					opt, err := reader.ReadString('\n')
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "error reading input: %v\n", err)
-					} else {
-						opt = strings.TrimSpace(opt)
-						switch opt {
-						case "1":
-							// Advance the counter, jump over the next line
-							n++
-							proceed = false
-						case "2":
-							proceed = false
-						default:
-							fmt.Printf("'%s' is an invalid option.\n", opt)
-						}
-					}
-				}
+				n = n + nextLineInvalid(nameNote, content[n], content[n+1])
 			}
 			n++
 		case dayWorkCanonRe.MatchString(content[n]):
@@ -493,36 +431,7 @@ func formatNote(nameNote string) error {
 				break
 			default:
 				// error, the next line is invalid
-				proceed := true
-				// TODO: this has to be a function
-				for proceed {
-					fmt.Println()
-					fmt.Println("File:", nameNote)
-					fmt.Println("Current line:")
-					fmt.Println(content[n])
-					fmt.Println("The line below is invalid")
-					fmt.Println(content[n+1])
-					fmt.Println("Choose what to do")
-					fmt.Println("1- Erase line")
-					fmt.Println("2- Leave it(will be prompted to modify it later)")
-					fmt.Print("> ")
-					opt, err := reader.ReadString('\n')
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "error reading input: %v\n", err)
-					} else {
-						opt = strings.TrimSpace(opt)
-						switch opt {
-						case "1":
-							// Advance the counter, jump over the next line
-							n++
-							proceed = false
-						case "2":
-							proceed = false
-						default:
-							fmt.Printf("'%s' is an invalid option.\n", opt)
-						}
-					}
-				}
+				n = n + nextLineInvalid(nameNote, content[n], content[n+1])
 			}
 			n++
 
@@ -543,35 +452,7 @@ func formatNote(nameNote string) error {
 				break
 			default:
 				// error, the next line is invalid
-				proceed := true
-				for proceed {
-					fmt.Println()
-					fmt.Println("File:", nameNote)
-					fmt.Println("Current line:")
-					fmt.Println(content[n])
-					fmt.Println("The line below is invalid")
-					fmt.Println(content[n+1])
-					fmt.Println("Choose what to do")
-					fmt.Println("1- Erase line")
-					fmt.Println("2- Leave it(will be prompted to modify it later)")
-					fmt.Print("> ")
-					opt, err := reader.ReadString('\n')
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "error reading input: %v\n", err)
-					} else {
-						opt = strings.TrimSpace(opt)
-						switch opt {
-						case "1":
-							// Advance the counter, jump over the next line
-							n++
-							proceed = false
-						case "2":
-							proceed = false
-						default:
-							fmt.Printf("'%s' is an invalid option.\n", opt)
-						}
-					}
-				}
+				n = n + nextLineInvalid(nameNote, content[n], content[n+1])
 			}
 			n++
 		default:
@@ -733,6 +614,37 @@ func formatNote(nameNote string) error {
 						}
 					}
 				}
+			}
+		}
+	}
+}
+
+// nextLineInvalid prompt choosing if erasing the line below(return 1) or
+// leaving it for later modification(return 0)
+func nextLineInvalid(nameNote string, cl string, nl string) int {
+	for {
+		fmt.Println()
+		fmt.Println("File:", nameNote)
+		fmt.Println("Current line:")
+		fmt.Println(cl)
+		fmt.Println("The line below is invalid")
+		fmt.Println(nl)
+		fmt.Println("Choose what to do")
+		fmt.Println("1- Erase line")
+		fmt.Println("2- Leave it(will be prompted to modify it later)")
+		fmt.Print("> ")
+		opt, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error reading input: %v\n", err)
+		} else {
+			opt = strings.TrimSpace(opt)
+			switch opt {
+			case "1":
+				return 1
+			case "2":
+				return 0
+			default:
+				fmt.Printf("'%s' is an invalid option.\n", opt)
 			}
 		}
 	}
