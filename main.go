@@ -301,77 +301,8 @@ func formatNote(nameNote string) error {
 	if content[len(content)-1] == "" {
 		content = content[:len(content)-1]
 	}
-	newContent := ""
-	lineN := 0
 
-	// make this a function i think
-	for {
-		// TODO: use break more often instead of if/else
-		if canonRe.MatchString(content[lineN]) {
-			newContent += content[lineN] + "\n"
-			lineN++
-			break
-		}
-		if content[lineN] == "" {
-			lineN++
-			break
-		}
-		fmt.Println()
-		fmt.Println("File:", nameNote)
-		fmt.Println("Current first line:")
-		fmt.Println(content[lineN])
-		fmt.Println("Choose operation")
-		fmt.Println("1- Add line above")
-		fmt.Println("2- Edit line")
-		fmt.Println("3- Erase line")
-		fmt.Print("> ")
-		opt, err := reader.ReadString('\n')
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "error reading input: %v\n", err)
-			break // or continue?
-		}
-		opt = strings.TrimSpace(opt)
-		switch opt {
-		case "1":
-			// NOTE: How is the user suppose to know what the canon should be?
-			for {
-				fmt.Println("New line:")
-				fmt.Print("> ")
-				line, err := reader.ReadString('\n')
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "error reading input: %v\n", err)
-				} else {
-					line = strings.TrimSpace(line)
-					if canonRe.MatchString(line) {
-						newContent += line + "\n"
-						break
-					} else {
-						fmt.Printf("'%s' is an invalid line\n", line)
-					}
-				}
-			}
-		case "2":
-			line := liner.NewLiner()
-			defer line.Close()
-			for {
-				input, err := line.PrefilledInput(content[lineN], -1)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "error on input: %v\n", err)
-				} else {
-					if canonRe.MatchString(input) {
-						newContent += input + "\n"
-						break
-					} else {
-						fmt.Printf("'%s' is an invalid line\n", input)
-					}
-				}
-			}
-		case "3":
-			lineN++
-		default:
-			fmt.Printf("'%s' is an invalid option.\n", opt)
-		}
-	}
+	newContent, lineN := validFirstLine(nameNote, content)
 
 	// check each line after the first, for non-valid ones allow user to erase or modify
 	for lineN < len(content) {
@@ -591,6 +522,80 @@ func formatNote(nameNote string) error {
 					}
 				}
 			}
+		}
+	}
+}
+
+// validFirstLine ensures the first line of a note is the canon.
+func validFirstLine(nameNote string, content []string) (string, int) {
+	newContent := ""
+	lineN := 0
+
+	for {
+		// TODO: use return more often instead of if/else
+		if canonRe.MatchString(content[lineN]) {
+			lineN++
+			return content[lineN] + "\n", lineN
+		}
+		if content[lineN] == "" {
+			lineN++
+			continue
+		}
+		fmt.Println()
+		fmt.Println("File:", nameNote)
+		fmt.Println("Current first line:")
+		fmt.Println(content[lineN])
+		fmt.Println("Choose operation")
+		fmt.Println("1- Add line above")
+		fmt.Println("2- Edit line")
+		fmt.Println("3- Erase line")
+		fmt.Print("> ")
+		opt, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error reading input: %v\n", err)
+			continue
+		}
+		opt = strings.TrimSpace(opt)
+		switch opt {
+		case "1":
+			// NOTE: How is the user suppose to know what the canon should be?
+			for {
+				fmt.Println("New line:")
+				fmt.Print("> ")
+				line, err := reader.ReadString('\n')
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "error reading input: %v\n", err)
+				} else {
+					line = strings.TrimSpace(line)
+					if canonRe.MatchString(line) {
+						newContent += line + "\n"
+						lineN++
+						return newContent, lineN
+					} else {
+						fmt.Printf("'%s' is an invalid line\n", line)
+					}
+				}
+			}
+		case "2":
+			line := liner.NewLiner()
+			defer line.Close()
+			for {
+				input, err := line.PrefilledInput(content[lineN], -1)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "error on input: %v\n", err)
+				} else {
+					if canonRe.MatchString(input) {
+						newContent += input + "\n"
+						break
+					} else {
+						fmt.Printf("'%s' is an invalid line\n", input)
+					}
+				}
+			}
+		case "3":
+			lineN++
+		default:
+			fmt.Printf("'%s' is an invalid option.\n", opt)
 		}
 	}
 }
