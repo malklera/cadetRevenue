@@ -186,6 +186,10 @@ they get sorted.
 [ ] I think when i modify a line in the last line, like 'sabado ... m:' i do not
 add the needed 't:0' below.
 
+[ ] Decide if when showing current line(`nextLineInvalid`) i will show the original
+line or the formated one, currently i show the original, so original: T:0, formated:
+t:0
+
 ```
 M:2000+3000+
 4000

@@ -399,47 +399,23 @@ func formatNote(nameNote string) error {
 			n++
 		case dayWorkRe.MatchString(content[n]):
 			newContent += checkPadding(content[n]) + "\n"
-			switch {
-			case n+1 > len(content):
-				fmt.Println()
-				fmt.Println("File:", nameNote)
-				fmt.Println("Current line:")
-				fmt.Println(content[n])
-				fmt.Println("There are no entries for procedings, will be filled with 0")
-				newContent += "m:0" + "\n"
-				newContent += "t:0" + "\n"
-			case procedingsRe.MatchString(content[n+1]):
-				break
-			default:
-				// error, the next line is invalid
-				n = n + nextLineInvalid(nameNote, content[n], content[n+1])
-			}
+			nC, j := fillNoEntry(nameNote, content, newContent, n)
+			newContent += nC
+			n += j
 			n++
 		case dayWorkCanonRe.MatchString(content[n]):
 			subStrings := dayWorkCanonRe.FindStringSubmatch(content[n])
 			newContent += subStrings[3] + "\n" + checkPadding(subStrings[1]+" "+subStrings[2]) + "\n"
-			switch {
-			case n+1 > len(content):
-				fmt.Println()
-				fmt.Println("File:", nameNote)
-				fmt.Println("Current line:")
-				fmt.Println(content[n])
-				fmt.Println("There are no entries for procedings, will be filled with 0")
-				newContent += "m:0" + "\n"
-				newContent += "t:0" + "\n"
-			case procedingsRe.MatchString(content[n+1]):
-				break
-			default:
-				// error, the next line is invalid
-				n = n + nextLineInvalid(nameNote, content[n], content[n+1])
-			}
+			nC, j := fillNoEntry(nameNote, content, newContent, n)
+			newContent += nC
+			n += j
 			n++
-
 		case procedingsRe.MatchString(content[n]):
 			newContent += content[n] + "\n"
 			switch {
 			case n+1 == len(content):
 				newContent += "t:0"
+				// TODO: Colaps all break into one case
 			case procedingsRe.MatchString(content[n+1]):
 				break
 			case canonRe.MatchString(content[n+1]):
@@ -647,6 +623,27 @@ func nextLineInvalid(nameNote string, cl string, nl string) int {
 				fmt.Printf("'%s' is an invalid option.\n", opt)
 			}
 		}
+	}
+}
+
+// fillNoEntry fill with 0 if there are no procedings in the next line, or prompt
+// for input if `nextLineInvalid`
+func fillNoEntry(nameNote string, content []string, newContent string, n int) (string, int) {
+	switch {
+	case n+1 > len(content):
+		fmt.Println()
+		fmt.Println("File:", nameNote)
+		fmt.Println("Current line:")
+		fmt.Println(content[n])
+		fmt.Println("There are no entries for procedings, will be filled with 0")
+		newContent += "m:0" + "\n"
+		newContent += "t:0" + "\n"
+		return newContent, 0
+	case procedingsRe.MatchString(content[n+1]):
+		return "", 0
+	default:
+		// error, the next line is invalid
+		return "", nextLineInvalid(nameNote, content[n], content[n+1])
 	}
 }
 
