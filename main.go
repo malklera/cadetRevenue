@@ -302,24 +302,24 @@ func formatNote(nameNote string) error {
 		content = content[:len(content)-1]
 	}
 	newContent := ""
-	n := 0
+	lineN := 0
 
 	// make this a function i think
 	for {
 		// TODO: use break more often instead of if/else
-		if canonRe.MatchString(content[n]) {
-			newContent += content[n] + "\n"
-			n++
+		if canonRe.MatchString(content[lineN]) {
+			newContent += content[lineN] + "\n"
+			lineN++
 			break
 		}
-		if content[n] == "" {
-			n++
+		if content[lineN] == "" {
+			lineN++
 			break
 		}
 		fmt.Println()
 		fmt.Println("File:", nameNote)
 		fmt.Println("Current first line:")
-		fmt.Println(content[n])
+		fmt.Println(content[lineN])
 		fmt.Println("Choose operation")
 		fmt.Println("1- Add line above")
 		fmt.Println("2- Edit line")
@@ -354,7 +354,7 @@ func formatNote(nameNote string) error {
 			line := liner.NewLiner()
 			defer line.Close()
 			for {
-				input, err := line.PrefilledInput(content[n], -1)
+				input, err := line.PrefilledInput(content[lineN], -1)
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "error on input: %v\n", err)
 				} else {
@@ -367,70 +367,70 @@ func formatNote(nameNote string) error {
 				}
 			}
 		case "3":
-			n++
+			lineN++
 		default:
 			fmt.Printf("'%s' is an invalid option.\n", opt)
 		}
 	}
 
 	// check each line after the first, for non-valid ones allow user to erase or modify
-	for n < len(content) {
+	for lineN < len(content) {
 		switch {
-		case content[n] == "":
-			n++
-		case canonRe.MatchString(content[n]):
-			newContent += content[n] + "\n"
-			n++
-		case dayNoWorkRe.MatchString(content[n]):
-			day := strings.Split(content[n], ":")
+		case content[lineN] == "":
+			lineN++
+		case canonRe.MatchString(content[lineN]):
+			newContent += content[lineN] + "\n"
+			lineN++
+		case dayNoWorkRe.MatchString(content[lineN]):
+			day := strings.Split(content[lineN], ":")
 			newContent += checkPadding(day[0]) + "\n"
 			newContent += "m:" + day[1] + "\n"
 			newContent += "t:0" + "\n"
 			switch {
-			case n+1 == len(content):
+			case lineN+1 == len(content):
 				newContent, _ = strings.CutSuffix(newContent, "\n")
-			case canonRe.MatchString(content[n+1]) || dayNoWorkRe.MatchString(content[n+1]) ||
-				dayWorkRe.MatchString(content[n+1]) || dayWorkCanonRe.MatchString(content[n+1]):
+			case canonRe.MatchString(content[lineN+1]) || dayNoWorkRe.MatchString(content[lineN+1]) ||
+				dayWorkRe.MatchString(content[lineN+1]) || dayWorkCanonRe.MatchString(content[lineN+1]):
 				break
 			default:
 				// error, the next line is invalid
-				n = n + nextLineInvalid(nameNote, content[n], content[n+1])
+				lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1])
 			}
-			n++
-		case dayWorkRe.MatchString(content[n]):
-			newContent += checkPadding(content[n]) + "\n"
-			nC, j := fillNoEntry(nameNote, content, newContent, n)
+			lineN++
+		case dayWorkRe.MatchString(content[lineN]):
+			newContent += checkPadding(content[lineN]) + "\n"
+			nC, j := fillNoEntry(nameNote, content, newContent, lineN)
 			newContent += nC
-			n += j
-			n++
-		case dayWorkCanonRe.MatchString(content[n]):
-			subStrings := dayWorkCanonRe.FindStringSubmatch(content[n])
+			lineN += j
+			lineN++
+		case dayWorkCanonRe.MatchString(content[lineN]):
+			subStrings := dayWorkCanonRe.FindStringSubmatch(content[lineN])
 			newContent += subStrings[3] + "\n" + checkPadding(subStrings[1]+" "+subStrings[2]) + "\n"
-			nC, j := fillNoEntry(nameNote, content, newContent, n)
+			nC, j := fillNoEntry(nameNote, content, newContent, lineN)
 			newContent += nC
-			n += j
-			n++
-		case procedingsRe.MatchString(content[n]):
-			newContent += content[n] + "\n"
+			lineN += j
+			lineN++
+		case procedingsRe.MatchString(content[lineN]):
+			newContent += content[lineN] + "\n"
 			switch {
-			case n+1 == len(content):
+			case lineN+1 == len(content):
 				newContent += "t:0"
 				// TODO: Colaps all break into one case
-			case procedingsRe.MatchString(content[n+1]):
+			case procedingsRe.MatchString(content[lineN+1]):
 				break
-			case canonRe.MatchString(content[n+1]):
+			case canonRe.MatchString(content[lineN+1]):
 				break
-			case dayNoWorkRe.MatchString(content[n+1]):
+			case dayNoWorkRe.MatchString(content[lineN+1]):
 				break
-			case dayWorkRe.MatchString(content[n+1]):
+			case dayWorkRe.MatchString(content[lineN+1]):
 				break
-			case dayWorkCanonRe.MatchString(content[n+1]):
+			case dayWorkCanonRe.MatchString(content[lineN+1]):
 				break
 			default:
 				// error, the next line is invalid
-				n = n + nextLineInvalid(nameNote, content[n], content[n+1])
+				lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1])
 			}
-			n++
+			lineN++
 		default:
 			// Non valid line
 			proceed := true
@@ -438,7 +438,7 @@ func formatNote(nameNote string) error {
 				fmt.Println()
 				fmt.Println("File:", nameNote)
 				fmt.Println("Current line:")
-				fmt.Println(content[n])
+				fmt.Println(content[lineN])
 				fmt.Println("The line is invalid")
 				fmt.Println("Choose what to do")
 				fmt.Println("1- Erase line")
@@ -458,7 +458,7 @@ func formatNote(nameNote string) error {
 						defer line.Close()
 						for {
 							fmt.Println("Modify the line and press Enter")
-							input, err := line.PrefilledInput(content[n], -1)
+							input, err := line.PrefilledInput(content[lineN], -1)
 							if err != nil {
 								fmt.Fprintf(os.Stderr, "error on input: %v\n", err)
 							} else if validLine(input) {
@@ -476,7 +476,7 @@ func formatNote(nameNote string) error {
 					}
 				}
 			}
-			n++
+			lineN++
 		}
 	}
 
