@@ -322,6 +322,7 @@ func formatNote(nameNote string) error {
 				newContent, _ = strings.CutSuffix(newContent, "\n")
 			case canonRe.MatchString(content[lineN+1]) || dayNoWorkRe.MatchString(content[lineN+1]) ||
 				dayWorkRe.MatchString(content[lineN+1]) || dayWorkCanonRe.MatchString(content[lineN+1]):
+				// TODO: this is wrong
 				break
 			default:
 				// error, the next line is invalid
@@ -652,7 +653,7 @@ func fillNoEntry(nameNote string, content []string, newContent string, n int) (s
 	}
 }
 
-// checkPadding adds 0 pading to single digit dates
+// checkPadding takes a 'Day n/m', returns it zero padded
 func checkPadding(day string) string {
 	parts := strings.Split(day, " ")
 	formatDay := parts[0] + " "
