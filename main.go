@@ -674,13 +674,39 @@ func addPadding(day string) string {
 
 // validLine evaluate if the given line conform to any of the declared regex's
 func validLine(line string) bool {
+	// TODO: ensure the dates are valid numbers, not 40/10 or 1/13
 	switch {
-	case canonRe.MatchString(line), dayNoWorkRe.MatchString(line),
-		dayWorkRe.MatchString(line), procedingsRe.MatchString(line):
+	case canonRe.MatchString(line), procedingsRe.MatchString(line):
 		return true
+	case dayNoWorkRe.MatchString(line), dayWorkRe.MatchString(line),
+		dayWorkCanonRe.MatchString(line):
+		day := strings.Split(line, " ")
+		date, _, _ := strings.Cut(day[1], ":")
+		return validDate(date)
 	default:
 		return false
 	}
+}
+
+// validDate evaluate if the given day `Day dd/mm` has sensible max numbers, dd < 31
+// and mm < 13
+func validDate(date string) bool {
+	parts := strings.Split(date, "/")
+	d, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return false
+	}
+	if 1 > d || d > 31 {
+		return false
+	}
+	m, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return false
+	}
+	if 1 > m || m > 12 {
+		return false
+	}
+	return true
 }
 
 // processNote accept the name of a file, extract the data from it, return a
