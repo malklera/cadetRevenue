@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestCheckPadding(t *testing.T) {
+func TestAddPadding(t *testing.T) {
 	var days = []struct {
 		day  string
 		want string
@@ -19,7 +19,7 @@ func TestCheckPadding(t *testing.T) {
 
 	for _, tt := range days {
 		t.Run(tt.day, func(t *testing.T) {
-			ans := checkPadding(tt.day)
+			ans := addPadding(tt.day)
 			if ans != tt.want {
 				t.Errorf("got '%s', want '%s'", ans, tt.want)
 			}
