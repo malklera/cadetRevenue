@@ -320,8 +320,8 @@ func formatNote(nameNote string) error {
 			switch {
 			case lineN+1 == len(content):
 				newContent, _ = strings.CutSuffix(newContent, "\n")
-			case canonRe.MatchString(content[lineN+1]) || dayNoWorkRe.MatchString(content[lineN+1]) ||
-				dayWorkRe.MatchString(content[lineN+1]) || dayWorkCanonRe.MatchString(content[lineN+1]):
+			case canonRe.MatchString(content[lineN+1]), dayNoWorkRe.MatchString(content[lineN+1]),
+				dayWorkRe.MatchString(content[lineN+1]), dayWorkCanonRe.MatchString(content[lineN+1]):
 				// TODO: this is wrong
 				break
 			default:
