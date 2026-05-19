@@ -393,12 +393,13 @@ func formatNote(nameNote string) error {
 							input, err := line.PrefilledInput(content[lineN], -1)
 							if err != nil {
 								fmt.Fprintf(os.Stderr, "error on input: %v\n", err)
-							} else if validLine(input) {
+								continue
+							}
+							if validLine(input) {
 								newContent += input + "\n"
 								break
-							} else {
-								fmt.Printf("'%s'\n is not a valid line\n", input)
 							}
+							fmt.Printf("'%s'\n is not a valid line\n", input)
 						}
 						proceed = false
 					case "3":
