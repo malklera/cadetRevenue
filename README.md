@@ -156,6 +156,10 @@ It is a CLI with the following flags available.
 
 [x] Think if the subcommands should be flagsets or not.
 
+[ ] Test `validFirstLine`
+
+[ ] All line check should check if there is an entry for the next line.
+
 [ ] Update regex, 'T: ' has to be valid, just add a 0 automatically.
 
 [ ] Update regex, 't: - 4000' has to be valid, just add delete the spaces automatically.
@@ -165,7 +169,7 @@ It is a CLI with the following flags available.
 [ ] Update regex, 'm:2000+2500+2500+2000+2000+6800+2000+2000+2000++4000+6000' has to be valid, just delete the extra symbol if they are the same, ++ or --,
 it is an error if +- or -+
 
-[ ] Think about this, 'm:-200+1600+2600+800+800+1000+1500' is a negative valid if
+[ ] Think about this, `m:-200+1600+2600+800+800+1000+1500` is a negative valid if
 it is not the last element?
 
 [ ] Check how the db works, need to rework it, for now, leave it as is.
@@ -181,7 +185,7 @@ they get sorted.
 
 [ ] Replace the use of strings.Split()
 
-[ ] Change switch to use || for all that have a equal action
+[x] Change switch to use ',' for all that have a equal action
 
 [ ] I think when i modify a line in the last line, like 'sabado ... m:' i do not
 add the needed 't:0' below.
@@ -189,6 +193,14 @@ add the needed 't:0' below.
 [ ] Decide if when showing current line(`nextLineInvalid`) i will show the original
 line or the formated one, currently i show the original, so original: T:0, formated:
 t:0
+
+[ ] `Lunes 29/9:` is this an error or consider it like `Lunes 29/9:0`?
+
+[ ] At some point use the `validDate()` to ensure i have possible dates,
+not actually correct ones yet.
+
+[ ] Rework the user input interaction, need a way of going back, always, try to
+make all interactions one function, just pass the needed checks.
 
 ```
 M:2000+3000+
