@@ -314,7 +314,7 @@ func formatNote(nameNote string) error {
 			lineN++
 		case dayNoWorkRe.MatchString(content[lineN]):
 			day := strings.Split(content[lineN], ":")
-			newContent += checkPadding(day[0]) + "\n"
+			newContent += addPadding(day[0]) + "\n"
 			newContent += "m:" + day[1] + "\n"
 			newContent += "t:0" + "\n"
 			switch {
@@ -330,14 +330,14 @@ func formatNote(nameNote string) error {
 			}
 			lineN++
 		case dayWorkRe.MatchString(content[lineN]):
-			newContent += checkPadding(content[lineN]) + "\n"
+			newContent += addPadding(content[lineN]) + "\n"
 			nC, j := fillNoEntry(nameNote, content, newContent, lineN)
 			newContent += nC
 			lineN += j
 			lineN++
 		case dayWorkCanonRe.MatchString(content[lineN]):
 			subStrings := dayWorkCanonRe.FindStringSubmatch(content[lineN])
-			newContent += subStrings[3] + "\n" + checkPadding(subStrings[1]+" "+subStrings[2]) + "\n"
+			newContent += subStrings[3] + "\n" + addPadding(subStrings[1]+" "+subStrings[2]) + "\n"
 			nC, j := fillNoEntry(nameNote, content, newContent, lineN)
 			newContent += nC
 			lineN += j
@@ -653,8 +653,8 @@ func fillNoEntry(nameNote string, content []string, newContent string, n int) (s
 	}
 }
 
-// checkPadding takes a 'Day n/m', returns it zero padded
-func checkPadding(day string) string {
+// addPadding takes a 'Day n/m', returns it zero padded
+func addPadding(day string) string {
 	parts := strings.Split(day, " ")
 	formatDay := parts[0] + " "
 	dates := strings.Split(parts[1], "/")
