@@ -63,3 +63,27 @@ func TestValidLine(t *testing.T) {
 		})
 	}
 }
+
+func TestValidDate(t *testing.T) {
+	var dates = []struct {
+		date string
+		want bool
+	}{
+		{"13/3", true},
+		{"1/12", true},
+		{"31/5", true},
+		{"-3/7", false},
+		{"0/6", false},
+		{"9/0", false},
+		{"8/13", false},
+	}
+
+	for _, tt := range dates {
+		t.Run(tt.date, func(t *testing.T) {
+			ans := validDate(tt.date)
+			if ans != tt.want {
+				t.Errorf("got '%t', want '%t'", ans, tt.want)
+			}
+		})
+	}
+}
