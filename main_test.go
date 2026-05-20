@@ -2,6 +2,8 @@ package main
 
 import (
 	"testing"
+	"errors"
+	"strconv"
 )
 
 func TestAddPadding(t *testing.T) {
@@ -83,6 +85,34 @@ func TestValidDate(t *testing.T) {
 			ans := validDate(tt.date)
 			if ans != tt.want {
 				t.Errorf("got '%t', want '%t'", ans, tt.want)
+			}
+		})
+	}
+}
+
+func TestProcessProcedings(t *testing.T) {
+	var contents = []struct {
+		content  string
+		income   int
+		expenses int
+		err      error
+	}{
+		{"M:2000", 2000, 0, nil},
+		{"T:2000+2000", 4000, 0, nil},
+		{"M:-4500", 0, -4500, nil},
+		{"M:2500+2200+2500+6000+2000+4000+4000+2000-14800", 25200, -14800, nil},
+		{"T: 2000+5000+2000+2000+2000+3000+2500-3300", 18500, -3300, nil},
+		{"M:2000++2500+4500+4500+4000-2000", 0, 0, strconv.ErrSyntax},
+		{"T:-2000+3000", 0, 0, strconv.ErrSyntax}, // TODO: this will change when i update the regex
+		// {"T:-2000-3000", 0, 0, strconv.ErrSyntax}, // TODO: this will change when i update the regex
+		{"T:2000+", 0, 0, strconv.ErrSyntax}, // TODO: this will change when i update the regex
+	}
+
+	for _, tt := range contents {
+		t.Run(tt.content, func(t *testing.T) {
+			in, ex, er := processProcedings(tt.content)
+			if in != tt.income || ex != tt.expenses || !errors.Is(er, tt.err) {
+				t.Errorf("got '%d, %d, %v'; want '%d, %d, %v'", in, ex, er, tt.income, tt.expenses, tt.err)
 			}
 		})
 	}
