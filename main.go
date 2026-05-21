@@ -272,6 +272,7 @@ func validFileName(file string) (string, error) {
 						}
 					}
 				} else {
+					fmt.Println()
 					fmt.Printf("File '%s' succesfull renamed to '%s'\n", file, currentFileName)
 					retry = false
 					renameFor = false
@@ -544,8 +545,7 @@ func validFirstLine(nameNote string, content []string) (string, int) {
 	for {
 		// TODO: use return more often instead of if/else
 		if canonRe.MatchString(content[lineN]) {
-			lineN++
-			return content[lineN] + "\n", lineN
+			return content[lineN] + "\n", (lineN + 1)
 		}
 		if content[lineN] == "" {
 			lineN++
