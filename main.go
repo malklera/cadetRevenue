@@ -722,16 +722,17 @@ func processNote(nameNote string) ([]db.Entry, error) {
 	fmt.Println()
 	fmt.Println("Processing:", nameNote)
 
-	// Get the year
-	date := fileNameRe.FindStringSubmatch(nameNote)
-	year := date[2]
-
 	orgNote := filepath.Join(formatedDir, nameNote)
 	data, err := os.ReadFile(orgNote)
 	if err != nil {
 		return nil, err
 	}
 	content := strings.Split(string(data), "\n")
+
+	// TODO: when i change the name of the file, this has to be updated
+	// validate the name first
+	// Get the year
+	year := fileNameRe.FindStringSubmatch(nameNote)[2]
 
 	canon := 0
 
@@ -740,7 +741,7 @@ func processNote(nameNote string) ([]db.Entry, error) {
 	for n < len(content) {
 		var entry db.Entry
 		entry.Canon = canon
-		dateS := year + "-"
+		date := year + "-"
 		switch {
 		case canonRe.MatchString(content[n]):
 			line := strings.Split(content[n], " ")
@@ -751,10 +752,10 @@ func processNote(nameNote string) ([]db.Entry, error) {
 			}
 			n++
 		case dayWorkRe.MatchString(content[n]):
-			line := strings.Split(content[n], " ")
-			date := strings.Split(line[1], "/")
-			dateS += date[1] + "-" + date[0]
-			entry.Date, err = time.Parse(time.DateOnly, dateS)
+			_, cDate, _ := strings.Cut(content[n], " ")
+			day, month, _ := strings.Cut(cDate, "/")
+			date += month + "-" + day
+			entry.Date, err = time.Parse(time.DateOnly, date)
 			if err != nil {
 				return nil, err
 			}
