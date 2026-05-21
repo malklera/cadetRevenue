@@ -725,7 +725,7 @@ func processNote(nameNote string) ([]db.Entry, error) {
 	orgNote := filepath.Join(formatedDir, nameNote)
 	data, err := os.ReadFile(orgNote)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("os.ReadFile(%s): %w", orgNote, err)
 	}
 	content := strings.Split(string(data), "\n")
 
@@ -748,7 +748,7 @@ func processNote(nameNote string) ([]db.Entry, error) {
 
 			canon, err = strconv.Atoi(line[1])
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("canonRe.MatchString(%s): strconv.Atoi(%s): %w", content[n], line[1], err)
 			}
 			n++
 		case dayWorkRe.MatchString(content[n]):
@@ -757,23 +757,23 @@ func processNote(nameNote string) ([]db.Entry, error) {
 			date += month + "-" + day
 			entry.Date, err = time.Parse(time.DateOnly, date)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("dayWorkRe.MatchString(%s): time.Parse(%s, %s): %w", content[n], time.DateOnly, date, err)
 			}
 			n++
 			// here process the procedings and advance the counter
 			expensesM := 0
 			entry.IncomeM, expensesM, err = processProcedings(content[n])
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("dayWorkRe.MatchString(%s): processProcedings(%s): %w", content[n-1], content[n], err)
 			}
 			n++
 			expensesT := 0
 			entry.IncomeT, expensesT, err = processProcedings(content[n])
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("dayWorkRe.MatchString(%s): processProcedings(%s): %w", content[n-2], content[n], err)
 			}
-			entry.Expenses = expensesM + expensesT
 			n++
+			entry.Expenses = expensesM + expensesT
 			entries = append(entries, entry)
 		default:
 			return nil, fmt.Errorf("line '%s' of file '%s' has the wrong format", content[n], nameNote)
