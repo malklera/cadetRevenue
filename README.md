@@ -177,7 +177,7 @@ it is not the last element?
 [x] Think which flags are global(target) and belong to a subcommand. show(year, month, day)
 
 [ ] Change the name of the originals files, to year-month-n.txt, try to see how
-they get sorted.
+they get sorted. Has to update `processNote()`.
 
 [x] Update all errors to a uniform format.
 
@@ -204,6 +204,10 @@ make all interactions one function, just pass the needed checks.
 
 [ ] `processProcedings("T:-2000-3000")` panics, why? fix it
 
+[ ] When testing `formatNote()` ensure it output the first line canon
+
+[ ] When `formatNote()` if there is a space anywhere, strip it.
+
 ```
 M:2000+3000+
 4000
@@ -223,6 +227,7 @@ cp backup/enero-4-2024.txt test-13-05/originals
 cp backup/noviembre-4-2024.txt test-13-05/originals
 cp backup/septiembre-4-2025.txt test-13-05/originals
 cp backup/abril-1-2024.txt test-13-05/originals
+
 cp backup/ test-13-05/originals
 cp backup/ test-13-05/originals
 
