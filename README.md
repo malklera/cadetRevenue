@@ -179,7 +179,7 @@ it is not the last element?
 [ ] Change the name of the originals files, to year-month-n.txt, try to see how
 they get sorted.
 
-[ ] Update all errors to a uniform format.
+[x] Update all errors to a uniform format.
 
 [ ] Ensure data for each day is unique in the database.
 
@@ -201,6 +201,8 @@ not actually correct ones yet.
 
 [ ] Rework the user input interaction, need a way of going back, always, try to
 make all interactions one function, just pass the needed checks.
+
+[ ] `processProcedings("T:-2000-3000")` panics, why? fix it
 
 ```
 M:2000+3000+

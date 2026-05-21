@@ -3,11 +3,11 @@ package db
 
 import (
 	"context"
-	"path/filepath"
 	"database/sql"
 	"fmt"
-	"log"
 	_ "modernc.org/sqlite"
+	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -25,18 +25,18 @@ type Entry struct {
 func New(target string) (*sql.DB, error) {
 	db, err := sql.Open("sqlite", filepath.Join(target, "entries.db"))
 	if err != nil {
-		return nil, fmt.Errorf(" > sql.Open(): %w", err)
+		return nil, fmt.Errorf("sql.Open(): %w", err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	if pingErr := db.PingContext(ctx); pingErr != nil {
-		return nil, fmt.Errorf(" > db.PringContext(): %w", err)
+		return nil, fmt.Errorf("db.PringContext(): %w", err)
 	}
 
 	if err = createSchema(db); err != nil {
-		return nil, fmt.Errorf(" > createSchema(): %w", err)
+		return nil, fmt.Errorf("createSchema(): %w", err)
 	}
 	return db, nil
 }
@@ -99,7 +99,8 @@ func ShowAll(db *sql.DB) ([]Entry, error) {
 		}
 		tempDate, err := time.Parse(time.DateTime, dateStr)
 		if err != nil {
-			log.Printf("error parsing date '%s' of row '%d'", dateStr, entry.ID)
+			// TODO: print the error
+			fmt.Fprintf(os.Stderr, "error parsing date '%s' of row '%d'", dateStr, entry.ID)
 		} else {
 			entry.Date = tempDate
 		}
@@ -199,7 +200,7 @@ func GetEntries(db *sql.DB, year string, month string) ([]Entry, error) {
 		}
 		tempDate, err := time.Parse(time.DateTime, dateStr)
 		if err != nil {
-			log.Printf("error parsing date '%s' of row '%d'", dateStr, entry.ID)
+			fmt.Fprintf(os.Stderr, "error parsing date '%s' of row '%d'", dateStr, entry.ID)
 		} else {
 			entry.Date = tempDate
 		}

@@ -89,7 +89,7 @@ func main() {
 		setupCmd.Parse(os.Args[2:])
 		err := createEnv(target)
 		if err != nil {
-			fmt.Printf("Error creating the needed directories at '%s': %v\n", target, err)
+			fmt.Fprintf(os.Stderr, "error creating the needed directories at '%s': %v\n", target, err)
 			os.Exit(1)
 		}
 		fmt.Printf("Enviroment successfully created at '%s'\n", target)
@@ -98,14 +98,14 @@ func main() {
 		formatCmd.Parse(os.Args[2:])
 		err := formatNotes(target)
 		if err != nil {
-			fmt.Printf("Error formating notes at '%s': %v", target, err)
+			fmt.Fprintf(os.Stderr, "error formating notes at '%s': %v", target, err)
 			os.Exit(1)
 		}
 	case "process":
 		processCmd.Parse(os.Args[2:])
 		err := processNotes(target)
 		if err != nil {
-			fmt.Printf("Error formating notes at `%s`: %v", target, err)
+			fmt.Fprintf(os.Stderr, "Error formating notes at `%s`: %v", target, err)
 			os.Exit(1)
 		}
 	case "show":
@@ -113,36 +113,40 @@ func main() {
 		showCmd.Parse(os.Args[2:])
 		// thinkg what to do here
 	default:
-		// ??
-		fmt.Println("print the help here once i make it")
+		fmt.Fprintln(os.Stderr, "wrong sub-command.")
+		setupCmd.Usage()
+		formatCmd.Usage()
+		processCmd.Usage()
+		showCmd.Usage()
+		os.Exit(1)
 	}
 }
 
 // createEnv takes a path and creates the originalsDir, formatedDir, processedDir
 func createEnv(target string) error {
+	// TODO: if there is an error, delete the created directories
 	err := os.MkdirAll(target, 0777)
 	if err != nil {
-		return fmt.Errorf(".os.MkdirAll(%s, 0777) : %w", target, err)
+		return fmt.Errorf("os.MkdirAll(%s, 0777): %w", target, err)
 	}
 
 	op := filepath.Join(target, originalsDir)
 	err = os.Mkdir(op, 0777)
 	if err != nil && !errors.Is(err, fs.ErrExist) {
-		return fmt.Errorf(".os.Mkdir(%s), 0777 : %w", op, err)
+		return fmt.Errorf("os.Mkdir(%s), 0777: %w", op, err)
 	}
 
 	fp := filepath.Join(target, formatedDir)
 	err = os.Mkdir(fp, 0777)
 	if err != nil && !errors.Is(err, fs.ErrExist) {
-		return fmt.Errorf(".os.Mkdir(%s), 0777 : %w", fp, err)
+		return fmt.Errorf("os.Mkdir(%s), 0777: %w", fp, err)
 	}
 
 	pp := filepath.Join(target, processedDir)
 	err = os.Mkdir(pp, 0777)
 	if err != nil && !errors.Is(err, fs.ErrExist) {
-		return fmt.Errorf(".os.Mkdir(%s), 0777 : %w", pp, err)
+		return fmt.Errorf("os.Mkdir(%s), 0777: %w", pp, err)
 	}
-
 	return nil
 }
 
@@ -152,7 +156,7 @@ func formatNotes(target string) error {
 	path := filepath.Join(target, originalsDir)
 	notes, err := listFiles(path)
 	if err != nil {
-		return fmt.Errorf(":listFiles(%s): %w", path, err)
+		return fmt.Errorf("listFiles(%s): %w", path, err)
 	}
 	for n := range notes {
 		note, err := validFileName(notes[n])
@@ -166,12 +170,12 @@ func formatNotes(target string) error {
 			case errSkipNote:
 				fmt.Printf("Formating of '%s' skipped\n", note)
 			default:
-				fmt.Fprintf(os.Stderr, "error checking the format of '%s' : %v\n", note, err)
+				fmt.Fprintf(os.Stderr, "error checking the format of '%s': %v\n", note, err)
 			}
 		case errRenameCancel:
 			fmt.Printf("The renaming of '%s' was canceled\n", note)
 		default:
-			fmt.Fprintf(os.Stderr, "error checking the name of '%s' : %v\n", note, err)
+			fmt.Fprintf(os.Stderr, "error checking the name of '%s': %v\n", note, err)
 		}
 	}
 	return nil
@@ -184,7 +188,7 @@ func listFiles(dir string) ([]string, error) {
 	}
 	allFiles, err := os.ReadDir(dir)
 	if err != nil {
-		return nil, fmt.Errorf(".os.ReadDir(%s) : %w", dir, err)
+		return nil, fmt.Errorf("os.ReadDir(%s): %w", dir, err)
 	}
 
 	textFiles := make([]string, 0, len(allFiles))
@@ -211,6 +215,7 @@ func validFileName(file string) (string, error) {
 	currentFileName := ""
 	renameFor := true
 
+	// TODO: refactor this
 	for renameFor {
 		currentFileName = file
 		for {
@@ -243,6 +248,7 @@ func validFileName(file string) (string, error) {
 		}
 
 		if file == currentFileName {
+			// use break instead
 			renameFor = false
 		} else {
 			retry := true
@@ -262,7 +268,7 @@ func validFileName(file string) (string, error) {
 						case "n", "N":
 							return file, errRenameCancel
 						default:
-							fmt.Printf("'%s' is an invalid option.\n", opt)
+							fmt.Fprintf(os.Stderr, "'%s' is an invalid option.\n", opt)
 						}
 					}
 				} else {
@@ -284,7 +290,7 @@ func formatNote(nameNote string) error {
 	orgNote := filepath.Join(originalsDir, nameNote)
 	data, err := os.ReadFile(orgNote)
 	if err != nil {
-		return fmt.Errorf(": os.ReadFile(%s): %w", orgNote, err)
+		return fmt.Errorf("os.ReadFile(%s): %w", orgNote, err)
 	}
 	fmt.Println()
 	fmt.Println("Formating:", nameNote)
@@ -405,7 +411,7 @@ func formatNote(nameNote string) error {
 					case "3":
 						return errSkipNote
 					default:
-						fmt.Printf("'%s' is an invalid option.\n", opt)
+						fmt.Fprintf(os.Stderr, "'%s' is an invalid option.\n", opt)
 					}
 				}
 			}
@@ -414,6 +420,8 @@ func formatNote(nameNote string) error {
 	}
 
 	// Move the file
+
+	// TODO: this has to be its own function
 
 	// Loop to os.CreateTemp()
 	for {
@@ -438,7 +446,7 @@ func formatNote(nameNote string) error {
 				case "n", "N":
 					return errSkipNote
 				default:
-					fmt.Printf("'%s' is an invalid option.\n", opt)
+					fmt.Fprintf(os.Stderr, "'%s' is an invalid option.\n", opt)
 				}
 			}
 		} else {
@@ -461,7 +469,7 @@ func formatNote(nameNote string) error {
 						case "n", "N":
 							return errSkipNote
 						default:
-							fmt.Printf("'%s' is an invalid option.\n", opt)
+							fmt.Fprintf(os.Stderr, "'%s' is an invalid option.\n", opt)
 						}
 					}
 				} else {
@@ -473,7 +481,7 @@ func formatNote(nameNote string) error {
 							if err := os.Rename(tempName, formatedNote); err != nil {
 								fmt.Println()
 								fmt.Println("File:", tempName)
-								fmt.Fprintf(os.Stderr, "error renaming '%s' to '%s' : %v\n", tempName, formatedNote, err)
+								fmt.Fprintf(os.Stderr, "error renaming '%s' to '%s': %v\n", tempName, formatedNote, err)
 								fmt.Println("Do you want to retry? (y/n)")
 								fmt.Print("> ")
 								opt, err := reader.ReadString('\n')
@@ -487,7 +495,7 @@ func formatNote(nameNote string) error {
 									case "n", "N":
 										return errSkipNote
 									default:
-										fmt.Printf("'%s' is an invalid option.\n", opt)
+										fmt.Fprintf(os.Stderr, "'%s' is an invalid option.\n", opt)
 									}
 								}
 							} else {
@@ -497,7 +505,7 @@ func formatNote(nameNote string) error {
 									if err := os.Remove(orgNote); err != nil {
 										fmt.Println()
 										fmt.Println("File:", orgNote)
-										fmt.Fprintf(os.Stderr, "error removing '%s' : %v\n", orgNote, err)
+										fmt.Fprintf(os.Stderr, "error removing '%s': %v\n", orgNote, err)
 										fmt.Println("Do you want to retry? (y/n)")
 										fmt.Print("> ")
 										opt, err := reader.ReadString('\n')
@@ -511,7 +519,7 @@ func formatNote(nameNote string) error {
 											case "n", "N":
 												return errSkipNote
 											default:
-												fmt.Printf("'%s' is an invalid option.\n", opt)
+												fmt.Fprintf(os.Stderr, "'%s' is an invalid option.\n", opt)
 											}
 										}
 									} else {
@@ -567,16 +575,15 @@ func validFirstLine(nameNote string, content []string) (string, int) {
 				line, err := reader.ReadString('\n')
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "error reading input: %v\n", err)
-				} else {
-					line = strings.TrimSpace(line)
-					if canonRe.MatchString(line) {
-						newContent += line + "\n"
-						lineN++
-						return newContent, lineN
-					} else {
-						fmt.Printf("'%s' is an invalid line\n", line)
-					}
+					continue
 				}
+				line = strings.TrimSpace(line)
+				if canonRe.MatchString(line) {
+					newContent += line + "\n"
+					lineN++
+					return newContent, lineN
+				}
+				fmt.Fprintf(os.Stderr, "'%s' is an invalid line\n", line)
 			}
 		case "2":
 			line := liner.NewLiner()
@@ -585,19 +592,19 @@ func validFirstLine(nameNote string, content []string) (string, int) {
 				input, err := line.PrefilledInput(content[lineN], -1)
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "error on input: %v\n", err)
-				} else {
-					if canonRe.MatchString(input) {
-						newContent += input + "\n"
-						break
-					} else {
-						fmt.Printf("'%s' is an invalid line\n", input)
-					}
+					continue
 				}
+				if canonRe.MatchString(input) {
+					newContent += input + "\n"
+					lineN++
+					return newContent, lineN
+				}
+				fmt.Fprintf(os.Stderr, "'%s' is an invalid line\n", input)
 			}
 		case "3":
 			lineN++
 		default:
-			fmt.Printf("'%s' is an invalid option.\n", opt)
+			fmt.Fprintf(os.Stderr, "'%s' is an invalid option.\n", opt)
 		}
 	}
 }
@@ -627,7 +634,7 @@ func nextLineInvalid(nameNote string, cl string, nl string) int {
 			case "2":
 				return 0
 			default:
-				fmt.Printf("'%s' is an invalid option.\n", opt)
+				fmt.Fprintf(os.Stderr, "'%s' is an invalid option.\n", opt)
 			}
 		}
 	}
@@ -649,7 +656,6 @@ func fillNoEntry(nameNote string, content []string, newContent string, n int) (s
 	case procedingsRe.MatchString(content[n+1]):
 		return "", 0
 	default:
-		// error, the next line is invalid
 		return "", nextLineInvalid(nameNote, content[n], content[n+1])
 	}
 }
@@ -674,7 +680,6 @@ func addPadding(day string) string {
 
 // validLine evaluate if the given line conform to any of the declared regex's
 func validLine(line string) bool {
-	// TODO: ensure the dates are valid numbers, not 40/10 or 1/13
 	switch {
 	case canonRe.MatchString(line), procedingsRe.MatchString(line):
 		return true
@@ -693,6 +698,7 @@ func validLine(line string) bool {
 func validDate(date string) bool {
 	parts := strings.Split(date, "/")
 	d, err := strconv.Atoi(parts[0])
+	// TODO: put both checks in the same if
 	if err != nil {
 		return false
 	}
@@ -775,17 +781,21 @@ func processNote(nameNote string) ([]db.Entry, error) {
 	return entries, nil
 }
 
-// processProcedings take in a valid string of procedingsRe, returns income,
+// processProcedings take in a valid string of `procedingsRe`, returns income,
 // expenses, error
 func processProcedings(content string) (int, int, error) {
+	// NOTE: i am currently loosing information, should i return a []int for
+	// procedings and expenses?
 	line := strings.Split(content, ":")
 	lineP := strings.TrimSpace(line[1])
 
 	procedings := 0
 	expenses := 0
+	// TODO: refactor this into a recursive function that returns []int
 	switch {
 	case strings.Contains(lineP, "-"):
 		hasExp := strings.Split(lineP, "-")
+		// NOTE: only allow for one -int, do not need to calculate len
 		exp, err := strconv.Atoi(hasExp[len(hasExp)-1])
 		if err != nil {
 			return 0, 0, err
@@ -815,7 +825,6 @@ func processProcedings(content string) (int, int, error) {
 		}
 		procedings += proc
 	}
-
 	return procedings, expenses, nil
 }
 
@@ -825,13 +834,14 @@ func processNotes(target string) error {
 	path := filepath.Join(target, formatedDir)
 	listNotes, err := listFiles(path)
 	if err != nil {
-		return fmt.Errorf("processNotes().listFiles(%s) : %w", path, err)
+		return fmt.Errorf("listFiles(%s): %w", path, err)
 	}
 
 	for n := range listNotes {
 		entries, err := processNote(listNotes[n])
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "error processing note '%s' : %v", listNotes[n], err)
+			// TODO: use continue instead of if/else
+			fmt.Fprintf(os.Stderr, "error processing note '%s': %v", listNotes[n], err)
 		} else {
 			// TODO: check this function again, do i want to open the database for each note or for all?
 			dbInstance, err := db.New("")
