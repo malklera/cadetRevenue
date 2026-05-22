@@ -829,36 +829,38 @@ func processProcedings(content string) (int, int, error) {
 	return procedings, expenses, nil
 }
 
-// processNotes process all notes in `formatedDir`, only returns an error if there
-// was a problem with `listFiles()`.
+// processNotes process all notes in `formatedDir`, move the notes correctly
+// formated to `processedDir`.
 func processNotes(target string) error {
 	path := filepath.Join(target, formatedDir)
 	listNotes, err := listFiles(path)
 	if err != nil {
 		return fmt.Errorf("listFiles(%s): %w", path, err)
 	}
+	dbInstance, err := db.New("")
+	if err != nil {
+		return fmt.Errorf("db.New(): %w", err)
+	}
+	defer dbInstance.Close()
 
 	for n := range listNotes {
 		entries, err := processNote(listNotes[n])
 		if err != nil {
-			// TODO: use continue instead of if/else
-			fmt.Fprintf(os.Stderr, "error processing note '%s': %v", listNotes[n], err)
-		} else {
-			// TODO: check this function again, do i want to open the database for each note or for all?
-			dbInstance, err := db.New("")
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "error opening the database: %v", err)
-			} else {
-				defer dbInstance.Close()
-				for _, e := range entries {
-					if err := db.AddEntry(dbInstance, e); err != nil {
-						fmt.Fprintf(os.Stderr, "error adding entry '%v' to the database: %v", e.Date, err)
-					} else {
-						if err := os.Rename(filepath.Join(formatedDir, listNotes[n]), filepath.Join(processedDir, listNotes[n])); err != nil {
-							fmt.Fprintf(os.Stderr, "error moving formated note to the processed directory: %v", err)
-						}
-					}
-				}
+			fmt.Fprintf(os.Stderr, "error processing note '%s': %v\n", listNotes[n], err)
+			continue
+		}
+		// TODO: check this function again, do i want to open the database for each note or for all?
+		moveNote := true
+		for _, e := range entries {
+			if err := db.AddEntry(dbInstance, e); err != nil {
+				fmt.Fprintf(os.Stderr, "error adding entry '%v' to the database: %v\n", e.Date, err)
+				moveNote = false
+				break
+			}
+		}
+		if moveNote {
+			if err := os.Rename(filepath.Join(formatedDir, listNotes[n]), filepath.Join(processedDir, listNotes[n])); err != nil {
+				fmt.Fprintf(os.Stderr, "error moving formated note to the processed directory: %v\n", err)
 			}
 		}
 	}
