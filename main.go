@@ -93,7 +93,7 @@ func main() {
 			os.Exit(1)
 		}
 		fmt.Printf("Enviroment successfully created at '%s'\n", target)
-		// TODO: have to create the db too, or just try this way and see what happens
+		// TODO: When updating the db.go have the creation of the db here
 	case "format":
 		formatCmd.Parse(os.Args[2:])
 		err := formatNotes(target)
@@ -111,7 +111,11 @@ func main() {
 	case "show":
 		fmt.Println("show")
 		showCmd.Parse(os.Args[2:])
-		// thinkg what to do here
+		err := showEntries(target, year, month, day)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "showEntries(%s, %d, %d, %d)", target, year, month, day)
+			os.Exit(1)
+		}
 	default:
 		fmt.Fprintln(os.Stderr, "wrong sub-command.")
 		setupCmd.Usage()
@@ -398,9 +402,7 @@ func formatNote(nameNote string) error {
 						}
 						if validLine(input) {
 							newContent += input + "\n"
-							// TODO: if the modify line is the last one, i do not add the
-							// needed t:0, maybe do not lineN++ when invalid line?
-							if lineN == len(content) - 1 {
+							if lineN == len(content)-1 {
 								newContent += "t:0"
 							}
 							break
@@ -863,4 +865,26 @@ func processNotes(target string) error {
 		}
 	}
 	return nil
+}
+
+func showEntries(target string, year int, month int, day int) error {
+	dbInstance, err := db.New(target)
+	if err != nil {
+		return fmt.Errorf("db.New(%s): %v", target, err)
+	}
+	// TODO: has to change this
+	entries, err := db.ShowAll(dbInstance)
+	if err != nil {
+		return fmt.Errorf("db.ShowAll(dbInstance): %v", err)
+	}
+	displayEntries(entries)
+	return nil
+}
+
+// displayEntries pretty print to stdout the given entry
+func displayEntries(entries []db.Entry) {
+	fmt.Println("Date	Canon	In. Morning	In. Afternoon	Expenses")
+	for _, e := range entries {
+		fmt.Printf("%v	%d	%d	%d	%d\n", e.Date, e.Canon, e.IncomeM, e.IncomeT, e.Expenses)
+	}
 }
