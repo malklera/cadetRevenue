@@ -304,6 +304,7 @@ func formatNote(nameNote string) error {
 	// TODO: replace this for another thing
 	content := strings.Split(strings.ToLower(string(data)), "\n")
 
+	// TODO: do not need this, if there is an empty line, i just ignore it in the switch
 	// the .Split leave me with a final empty string element
 	if content[len(content)-1] == "" {
 		content = content[:len(content)-1]
@@ -329,7 +330,6 @@ func formatNote(nameNote string) error {
 				newContent, _ = strings.CutSuffix(newContent, "\n")
 			case canonRe.MatchString(content[lineN+1]), dayNoWorkRe.MatchString(content[lineN+1]),
 				dayWorkRe.MatchString(content[lineN+1]), dayWorkCanonRe.MatchString(content[lineN+1]):
-				// TODO: this is wrong
 				break
 			default:
 				// error, the next line is invalid
@@ -354,16 +354,9 @@ func formatNote(nameNote string) error {
 			switch {
 			case lineN+1 == len(content):
 				newContent += "t:0"
-				// TODO: Colaps all break into one case
-			case procedingsRe.MatchString(content[lineN+1]):
-				break
-			case canonRe.MatchString(content[lineN+1]):
-				break
-			case dayNoWorkRe.MatchString(content[lineN+1]):
-				break
-			case dayWorkRe.MatchString(content[lineN+1]):
-				break
-			case dayWorkCanonRe.MatchString(content[lineN+1]):
+			case procedingsRe.MatchString(content[lineN+1]), canonRe.MatchString(content[lineN+1]),
+				dayNoWorkRe.MatchString(content[lineN+1]), dayWorkRe.MatchString(content[lineN+1]),
+				dayWorkCanonRe.MatchString(content[lineN+1]):
 				break
 			default:
 				// error, the next line is invalid
@@ -387,33 +380,38 @@ func formatNote(nameNote string) error {
 				opt, err := reader.ReadString('\n')
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "error reading input: %v\n", err)
-				} else {
-					opt = strings.TrimSpace(opt)
-					switch opt {
-					case "1":
-						proceed = false
-					case "2":
-						line := liner.NewLiner()
-						defer line.Close()
-						for {
-							fmt.Println("Modify the line and press Enter")
-							input, err := line.PrefilledInput(content[lineN], -1)
-							if err != nil {
-								fmt.Fprintf(os.Stderr, "error on input: %v\n", err)
-								continue
-							}
-							if validLine(input) {
-								newContent += input + "\n"
-								break
-							}
-							fmt.Printf("'%s'\n is not a valid line\n", input)
+					continue
+				}
+				opt = strings.TrimSpace(opt)
+				switch opt {
+				case "1":
+					proceed = false
+				case "2":
+					line := liner.NewLiner()
+					defer line.Close()
+					for {
+						fmt.Println("Modify the line and press Enter")
+						input, err := line.PrefilledInput(content[lineN], -1)
+						if err != nil {
+							fmt.Fprintf(os.Stderr, "error on input: %v\n", err)
+							continue
 						}
-						proceed = false
-					case "3":
-						return errSkipNote
-					default:
-						fmt.Fprintf(os.Stderr, "'%s' is an invalid option.\n", opt)
+						if validLine(input) {
+							newContent += input + "\n"
+							// TODO: if the modify line is the last one, i do not add the
+							// needed t:0, maybe do not lineN++ when invalid line?
+							if lineN == len(content) - 1 {
+								newContent += "t:0"
+							}
+							break
+						}
+						fmt.Printf("'%s'\n is not a valid line\n", input)
 					}
+					proceed = false
+				case "3":
+					return errSkipNote
+				default:
+					fmt.Fprintf(os.Stderr, "'%s' is an invalid option.\n", opt)
 				}
 			}
 			lineN++
