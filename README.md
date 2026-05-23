@@ -132,8 +132,6 @@ It is a CLI with the following flags available.
 
 [x] Create the DB schema and a initial selection of functions to interface with it, create table, input data, get data out?? think about this one more
 
-[ ] Ensure data for a specific day is unique, I copied the content of abril-4-2024.txt to abril-5-2024.txt to test
-
 [x] Move processed notes to the processed/ directory
 
 [x] Do some calculations for my notes, like getting a net profict daily
@@ -142,11 +140,13 @@ It is a CLI with the following flags available.
 
 [x] Check all TODO and NOTE on the project and dealt with them
 
-[ ] For now the used directories have to be created manually
+[x] For now the used directories have to be created manually
+
+[x] For now, this will be the state of it, it do what i want, need to study other things for now
 
 [ ] If a procedings gets cut by an accidental new line i will have to manually modify the file
 
-[ ] For now, this will be the state of it, it do what i want, need to study other things for now
+[ ] Ensure data for a specific day is unique, I copied the content of abril-4-2024.txt to abril-5-2024.txt to test
 
 # TODO v2
 
