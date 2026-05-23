@@ -1,27 +1,26 @@
-# Template: Go.AllowList.gitignore
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
 
-# Ignore
-# all files
-*
-# track all sub-directories
-!*/
-# un-track test directory
-/test/
+# Test binary, built with `go test -c`
+*.test
 
-# Allow
-!/.gitignore
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
 
-!*.go
-!go.sum
-!go.mod
+# Dependency directories (remove the comment below to include it)
+# vendor/
 
-!README.md
-!LICENSE
+# Go workspace file
+go.work
+go.work.sum
 
-!/internal/menu.go
-!/internal/operations.go
-!/internal/database/database.go
-!/internal/database/queries.sql
+# env file
+.env
 
-!/cmd/
-!/cmd/**/*
+backup/*
+test/*
+test-13-05/*
