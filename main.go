@@ -128,27 +128,66 @@ func main() {
 
 // createEnv takes a path and creates the originalsDir, formatedDir, processedDir
 func createEnv(target string) error {
-	// TODO: if there is an error, delete the created directories
 	err := os.MkdirAll(target, 0777)
 	if err != nil {
+		t := os.Remove(target)
+		if t != nil {
+			fmt.Fprintf(os.Stderr, "os.Remove(%s): %v", target, t)
+		}
 		return fmt.Errorf("os.MkdirAll(%s, 0777): %w", target, err)
 	}
 
 	op := filepath.Join(target, originalsDir)
 	err = os.Mkdir(op, 0777)
 	if err != nil && !errors.Is(err, fs.ErrExist) {
+		t := os.Remove(target)
+		if t != nil {
+			fmt.Fprintf(os.Stderr, "os.Remove(%s): %v", target, t)
+		}
+		o := os.Remove(op)
+		if o != nil {
+			fmt.Fprintf(os.Stderr, "os.Remove(%s): %v", op, o)
+		}
 		return fmt.Errorf("os.Mkdir(%s), 0777: %w", op, err)
 	}
 
 	fp := filepath.Join(target, formatedDir)
 	err = os.Mkdir(fp, 0777)
 	if err != nil && !errors.Is(err, fs.ErrExist) {
+		t := os.Remove(target)
+		if t != nil {
+			fmt.Fprintf(os.Stderr, "os.Remove(%s): %v", target, t)
+		}
+		o := os.Remove(op)
+		if o != nil {
+			fmt.Fprintf(os.Stderr, "os.Remove(%s): %v", op, o)
+		}
+		f := os.Remove(fp)
+		if f != nil {
+			fmt.Fprintf(os.Stderr, "os.Remove(%s): %v", fp, f)
+		}
 		return fmt.Errorf("os.Mkdir(%s), 0777: %w", fp, err)
 	}
 
 	pp := filepath.Join(target, processedDir)
 	err = os.Mkdir(pp, 0777)
 	if err != nil && !errors.Is(err, fs.ErrExist) {
+		t := os.Remove(target)
+		if t != nil {
+			fmt.Fprintf(os.Stderr, "os.Remove(%s): %v", target, t)
+		}
+		o := os.Remove(op)
+		if o != nil {
+			fmt.Fprintf(os.Stderr, "os.Remove(%s): %v", op, o)
+		}
+		f := os.Remove(fp)
+		if f != nil {
+			fmt.Fprintf(os.Stderr, "os.Remove(%s): %v", fp, f)
+		}
+		p := os.Remove(pp)
+		if p != nil {
+			fmt.Fprintf(os.Stderr, "os.Remove(%s): %v", pp, p)
+		}
 		return fmt.Errorf("os.Mkdir(%s), 0777: %w", pp, err)
 	}
 	return nil
@@ -543,7 +582,6 @@ func validFirstLine(nameNote string, content []string) (string, int) {
 	lineN := 0
 
 	for {
-		// TODO: use return more often instead of if/else
 		if canonRe.MatchString(content[lineN]) {
 			return content[lineN] + "\n", (lineN + 1)
 		}
