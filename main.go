@@ -734,7 +734,6 @@ func validLine(line string) bool {
 func validDate(date string) bool {
 	parts := strings.Split(date, "/")
 	d, err := strconv.Atoi(parts[0])
-	// TODO: put both checks in the same if
 	if err != nil {
 		return false
 	}
