@@ -1,12 +1,13 @@
-// Package database contains the struct and functions to interact with the database
-package database
+// Package db contains the struct and functions to interact with the database
+package db
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	_ "modernc.org/sqlite"
+	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -19,27 +20,23 @@ type Entry struct {
 	Expenses int       `db:"expenses"`
 }
 
-const (
-	fileDB = "internal/database/entries.db"
-)
-
-// New create a DB and set up a schema if needed, returns db
-// to operate with, if there are error on the set-up it returns it
-func New() (*sql.DB, error) {
-	db, err := sql.Open("sqlite", fileDB)
+// New create a DB at target and set up a schema if needed, returns a db
+// to operate with
+func New(target string) (*sql.DB, error) {
+	db, err := sql.Open("sqlite", filepath.Join(target, "entries.db"))
 	if err != nil {
-		return nil, fmt.Errorf("error on sql.Open(): %w", err)
+		return nil, fmt.Errorf("sql.Open(): %w", err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	if pingErr := db.PingContext(ctx); pingErr != nil {
-		return nil, fmt.Errorf("error on db.PringContext(): %w", err)
+		return nil, fmt.Errorf("db.PringContext(): %w", err)
 	}
 
 	if err = createSchema(db); err != nil {
-		return nil, fmt.Errorf("error on createSchema(): %w", err)
+		return nil, fmt.Errorf("createSchema(): %w", err)
 	}
 	return db, nil
 }
@@ -102,7 +99,8 @@ func ShowAll(db *sql.DB) ([]Entry, error) {
 		}
 		tempDate, err := time.Parse(time.DateTime, dateStr)
 		if err != nil {
-			log.Printf("error parsing date '%s' of row '%d'", dateStr, entry.ID)
+			// TODO: print the error
+			fmt.Fprintf(os.Stderr, "error parsing date '%s' of row '%d'", dateStr, entry.ID)
 		} else {
 			entry.Date = tempDate
 		}
@@ -202,7 +200,7 @@ func GetEntries(db *sql.DB, year string, month string) ([]Entry, error) {
 		}
 		tempDate, err := time.Parse(time.DateTime, dateStr)
 		if err != nil {
-			log.Printf("error parsing date '%s' of row '%d'", dateStr, entry.ID)
+			fmt.Fprintf(os.Stderr, "error parsing date '%s' of row '%d'", dateStr, entry.ID)
 		} else {
 			entry.Date = tempDate
 		}
