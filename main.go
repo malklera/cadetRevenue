@@ -347,7 +347,6 @@ func formatNote(nameNote string) error {
 	// TODO: replace this for another thing
 	content := strings.Split(strings.ToLower(string(data)), "\n")
 
-	// TODO: do not need this, if there is an empty line, i just ignore it in the switch
 	// the .Split leave me with a final empty string element
 	if content[len(content)-1] == "" {
 		content = content[:len(content)-1]
