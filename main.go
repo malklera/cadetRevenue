@@ -344,7 +344,6 @@ func formatNote(nameNote string) error {
 		fmt.Printf("'%s' is empty\n", nameNote)
 		return errSkipNote
 	}
-	// TODO: replace this for another thing
 	content := strings.Split(strings.ToLower(string(data)), "\n")
 
 	// the .Split leave me with a final empty string element
