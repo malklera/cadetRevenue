@@ -1,10 +1,10 @@
 # Cadet revenue calculator
 
-Allow to download a note with the differents shipments and calculate how much do you made.
+Allow to download a note with the different shipments and calculate how much do you made.
 
 I have my notes across the working day on Google Keep note taking app on my cellphone, you have to manually create a text file with the correct name, then copy into it the content of the note.
 
-I saw something about hiting the google api, but is too complicate for me at this moment.
+I saw something about hitting the google API, but is too complicate for me at this moment.
 
 ## Format
 
@@ -12,7 +12,7 @@ The note has to be a text file, with the following format, before processing the
 
 
 Name file: month-\[number of notes of this month\]-year.txt
-Where year is the four digit numerical representation, month is the word on english
+Where year is the four digit numerical representation, month is the word on English
 
 First line: Canon<space>int
 
@@ -59,8 +59,9 @@ Menu that ask
 - select next file, repeat previous three steps
 
 checkFormat: 
-- check it for the correct format, if something wrong, open it with $EDITOR and tell the user where the error is
-- after the user exit editor, execute previous step
+- check it for the correct format, if something wrong, present a input field prefilled
+with the wrong content and let the user change it.
+- Check the corrected input from the user.
 
 processFile:
 - read whole file into a list where each item is a line of the file
@@ -77,6 +78,20 @@ Row: id, year int, month int, day int, canon int, income int, expenses int
 (year, month, day) is unique
 
 ## Structure of the program
+
+It is a CLI with the following flags available.
+
+`-format` `-f`
+    Ensure the files in `originals` are correctly formatted, if wrong, point out
+    the error and prompt the user into correcting it.
+
+`-process` `-p`
+    Retrieve all data from files in `originals` and save them to the db, move the
+    successfully processed files into `processed`, skip and return error if any
+    file is not the correct format, continue with the rest of files.
+
+`-`
+
 
 - A main function from where it calls the main menu
 
@@ -133,6 +148,66 @@ Row: id, year int, month int, day int, canon int, income int, expenses int
 
 [ ] For now, this will be the state of it, it do what i want, need to study other things for now
 
+# TODO v2
+
+[x] Change the shape of the cli, setup, show, format, process, will be subcommands.
+
+[x] Fix the help messages.
+
+[x] Think if the subcommands should be flagsets or not.
+
+[ ] Test `validFirstLine`
+
+[ ] All line check should check if there is an entry for the next line.
+
+[ ] Update regex, 'T: ' has to be valid, just add a 0 automatically.
+
+[ ] Update regex, 't: - 4000' has to be valid, just add delete the spaces automatically.
+
+[ ] Update regex, 'm:2000+2200+2500+1600+2700-' has to be valid, just delete the unused symbol either + or -
+
+[ ] Update regex, 'm:2000+2500+2500+2000+2000+6800+2000+2000+2000++4000+6000' has to be valid, just delete the extra symbol if they are the same, ++ or --,
+it is an error if +- or -+
+
+[ ] Think about this, `m:-200+1600+2600+800+800+1000+1500` is a negative valid if
+it is not the last element?
+
+[ ] Check how the db works, need to rework it, for now, leave it as is.
+
+[x] Think which flags are global(target) and belong to a subcommand. show(year, month, day)
+
+[ ] Change the name of the originals files, to year-month-n.txt, try to see how
+they get sorted. Has to update `processNote()`.
+
+[x] Update all errors to a uniform format.
+
+[ ] Ensure data for each day is unique in the database.
+
+[ ] Replace the use of strings.Split()
+
+[x] Change switch to use ',' for all that have a equal action
+
+[ ] I think when i modify a line in the last line, like 'sabado ... m:' i do not
+add the needed 't:0' below.
+
+[ ] Decide if when showing current line(`nextLineInvalid`) i will show the original
+line or the formated one, currently i show the original, so original: T:0, formated:
+t:0
+
+[ ] `Lunes 29/9:` is this an error or consider it like `Lunes 29/9:0`?
+
+[ ] At some point use the `validDate()` to ensure i have possible dates,
+not actually correct ones yet.
+
+[ ] Rework the user input interaction, need a way of going back, always, try to
+make all interactions one function, just pass the needed checks.
+
+[ ] `processProcedings("T:-2000-3000")` panics, why? fix it
+
+[ ] When testing `formatNote()` ensure it output the first line canon
+
+[ ] When `formatNote()` if there is a space anywhere, strip it.
+
 ```
 M:2000+3000+
 4000
@@ -140,6 +215,22 @@ M:2000+3000+
 
 
 ## Test cases
+
+Files to copy from backup/ to test
+cp backup/febrero-*-2026.txt test-13-05/originals
+
+For format with errors
+cp backup/agosto-1-2-2024.txt test-13-05/originals
+cp backup/diciembre-2-2024.txt test-13-05/originals
+cp backup/enero-2-2026.txt test-13-05/originals
+cp backup/enero-4-2024.txt test-13-05/originals
+cp backup/noviembre-4-2024.txt test-13-05/originals
+cp backup/septiembre-4-2025.txt test-13-05/originals
+cp backup/abril-1-2024.txt test-13-05/originals
+
+cp backup/ test-13-05/originals
+cp backup/ test-13-05/originals
+
 
 ### For checkFileName()
 
@@ -392,7 +483,8 @@ M:2000+2500+4500+4500+4000-2000
 
 ```
 
-Error on Miercoles
+Error on Miércoles
+
 ```
 
 Canon 7000
