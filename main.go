@@ -261,31 +261,26 @@ func validFileName(file string) (string, error) {
 	// TODO: refactor this
 	for renameFor {
 		currentFileName = file
-		for {
-			//check the fileName to be the correct format
-			if fileNameRe.MatchString(currentFileName) {
-				break
-			} else {
-				// NOTE: Should ask the user if it want to rename the file?
-				fmt.Println()
-				fmt.Printf("'%s' is not a valid file name\n", currentFileName)
-				fmt.Println("The correct format is: month-int-year.txt")
-				fmt.Println("Where 'month' is a valid month written in Spanish word")
-				fmt.Println("Where 'int' is a number from 0 to 9")
-				fmt.Println("Where 'year' is a number from 0000 to 9999")
-				fmt.Printf("> ")
+		for fileNameRe.MatchString(currentFileName) {
+			// TODO: when changing the file name, change this too
+			fmt.Println()
+			fmt.Printf("'%s' is not a valid file name\n", currentFileName)
+			fmt.Println("The correct format is: month-int-year.txt")
+			fmt.Println("Where 'month' is a valid month written in Spanish word")
+			fmt.Println("Where 'int' is a number from 0 to 9")
+			fmt.Println("Where 'year' is a number from 0000 to 9999")
+			fmt.Printf("> ")
 
-				input, err := line.PrefilledInput(currentFileName, -1)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "error on input: %v\n", err)
+			input, err := line.PrefilledInput(currentFileName, -1)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "error on input: %v\n", err)
+			} else {
+				if _, err := os.Stat(filepath.Join(originalsDir, input)); err == nil {
+					fmt.Printf("File name '%s' already exist, input a different one\n", input)
+				} else if !errors.Is(err, fs.ErrNotExist) {
+					fmt.Fprintf(os.Stderr, "error checking if file '%s' exist: %v\n", input, err)
 				} else {
-					if _, err := os.Stat(filepath.Join(originalsDir, input)); err == nil {
-						fmt.Printf("File name '%s' already exist, input a different one\n", input)
-					} else if !errors.Is(err, fs.ErrNotExist) {
-						fmt.Fprintf(os.Stderr, "error checking if file '%s' exist: %v\n", input, err)
-					} else {
-						currentFileName = input
-					}
+					currentFileName = input
 				}
 			}
 		}
