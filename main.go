@@ -75,11 +75,25 @@ func main() {
 	showCmd.IntVar(&day, "day", 0, "Day to show, use numbers, one or two digits. Empty or 0 show all available.")
 	showCmd.IntVar(&day, "d", 0, "Day to show, use numbers, one or two digits. Empty or 0 show all available. (shorthand)")
 
+	calcCmd := flag.NewFlagSet("calculate", flag.ExitOnError)
+	calcCmd.StringVar(&target, "target", ".", "Calculate the revenue from '--target/entries.db'.")
+	calcCmd.StringVar(&target, "t", ".", "Calculate the revenue from '-t/entries.db'. (shorthand)")
+
+	calcCmd.IntVar(&year, "year", 0, "Year to calculate, use two or four numbers. Empty or 0 will calculate all available years.")
+	calcCmd.IntVar(&year, "y", 0, "Year to calculate, use two or four numbers. Empty or 0 will calculate all available years. (shorthand)")
+
+	calcCmd.IntVar(&month, "month", 0, "Month to show, use one or two digits. Empty or 0 will calculate all available months.")
+	calcCmd.IntVar(&month, "m", 0, "Month to show, use one or two digits. Empty or 0 will calculate all available months. (shorthand)")
+
+	calcCmd.IntVar(&day, "day", 0, "Day to show, use numbers, one or two digits. Empty or 0 will calculate all available days.")
+	calcCmd.IntVar(&day, "d", 0, "Day to show, use numbers, one or two digits. Empty or 0 will calculate all available days. (shorthand)")
+
 	if len(os.Args) < 2 {
 		setupCmd.Usage()
 		formatCmd.Usage()
 		processCmd.Usage()
 		showCmd.Usage()
+		calcCmd.Usage()
 		os.Exit(1)
 	}
 
@@ -109,11 +123,17 @@ func main() {
 			os.Exit(1)
 		}
 	case "show":
-		fmt.Println("show")
 		showCmd.Parse(os.Args[2:])
 		err := showEntries(target, year, month, day)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "showEntries(%s, %d, %d, %d)", target, year, month, day)
+			fmt.Fprintf(os.Stderr, "showEntries(%s, %d, %d, %d): %v", target, year, month, day, err)
+			os.Exit(1)
+		}
+	case "calculate":
+		calcCmd.Parse(os.Args[2:])
+		err := calcRevenue(target, year, month, day)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "calcRevenue(%s, %d, %d, %d): %v", target, year, month, day, err)
 			os.Exit(1)
 		}
 	default:
@@ -897,6 +917,7 @@ func processNotes(target string) error {
 	return nil
 }
 
+// showEntries show the entries of the given date
 func showEntries(target string, year int, month int, day int) error {
 	dbInstance, err := db.New(target)
 	if err != nil {
@@ -917,4 +938,9 @@ func displayEntries(entries []db.Entry) {
 	for _, e := range entries {
 		fmt.Printf("%v	%d	%d	%d	%d\n", e.Date, e.Canon, e.IncomeM, e.IncomeT, e.Expenses)
 	}
+}
+
+func calcRevenue(target string, year int, month int, day int) error {
+	// TODO: fill this up
+	return nil
 }
