@@ -200,13 +200,21 @@ t:0
 not actually correct ones yet.
 
 [ ] Rework the user input interaction, need a way of going back, always, try to
-make all interactions one function, just pass the needed checks.
+make each interaction its own function, just pass the needed checks.
 
 [ ] `processProcedings("T:-2000-3000")` panics, why? fix it
 
 [ ] When testing `formatNote()` ensure it output the first line canon
 
 [ ] When `formatNote()` if there is a space anywhere, strip it.
+
+[ ] Calculate the revenue of a given month.
+
+[ ] Change setup for init.
+
+[ ] Remake the database.
+
+[ ] Change the storage of income
 
 ```
 M:2000+3000+
