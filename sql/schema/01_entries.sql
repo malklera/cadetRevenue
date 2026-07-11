@@ -1,7 +1,7 @@
 -- +goose Up
 CREATE TABLE entry (
     id INTEGER PRIMARY KEY,
-    date TEXT UNIQUE,
+    date TEXT UNIQUE NOT NULL,
     canon INTEGER NOT NULL,
     profit REAL NOT NULL
 );
@@ -10,7 +10,7 @@ CREATE TABLE movement (
     id INTEGER PRIMARY KEY,
     entry_id INTEGER NOT NULL,
     shift TEXT NOT NULL,
-    ammount INTEGER NOT NULL,
+    amount INTEGER NOT NULL,
     FOREIGN KEY (entry_id) REFERENCES entry (id) ON DELETE CASCADE
 );
 

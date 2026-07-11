@@ -8,5 +8,6 @@ goose sqlite ./entries.db -dir sql/schema down
 # SQLC
 
 ```sh
-
+sqlc init
+sqlc generate
 ```
