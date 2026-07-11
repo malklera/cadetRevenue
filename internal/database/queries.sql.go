@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"time"
 )
 
 const createEntry = `-- name: CreateEntry :one
@@ -19,7 +20,7 @@ RETURNING id, date, canon, profit
 `
 
 type CreateEntryParams struct {
-	Date   string
+	Date   time.Time
 	Canon  int64
 	Profit float64
 }

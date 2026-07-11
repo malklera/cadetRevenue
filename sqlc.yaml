@@ -6,3 +6,8 @@ sql:
     gen:
       go:
         out: "internal/database"
+        overrides:
+          - column: "entry.date"
+            go_type:
+              import: "time"
+              type: "Time"

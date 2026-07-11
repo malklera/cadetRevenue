@@ -4,9 +4,13 @@
 
 package database
 
+import (
+	"time"
+)
+
 type Entry struct {
 	ID     int64
-	Date   string
+	Date   time.Time
 	Canon  int64
 	Profit float64
 }
