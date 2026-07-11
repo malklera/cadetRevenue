@@ -24,3 +24,4 @@ go.work.sum
 backup/*
 test/*
 test-13-05/*
+*.db

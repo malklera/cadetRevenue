@@ -37,9 +37,11 @@ var errSkipNote = errors.New("skip formatting of note")
 // Indicates that the given directory is invalid
 var errInvalidDir = errors.New("the given directory is invalid")
 
-var originalsDir = "originals"
-var formatedDir = "formated"
-var processedDir = "processed"
+const (
+	originalsDir = "originals"
+	formatedDir  = "formated"
+	processedDir = "processed"
+)
 
 var reader = bufio.NewReader(os.Stdin)
 
