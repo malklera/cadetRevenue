@@ -1,13 +1,13 @@
 -- +goose Up
 CREATE TABLE entry (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY,
     date TEXT UNIQUE,
     canon INTEGER NOT NULL,
     profit REAL NOT NULL
 );
 
 CREATE TABLE movement (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY,
     entry_id INTEGER NOT NULL,
     shift TEXT NOT NULL,
     ammount INTEGER NOT NULL,

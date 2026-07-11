@@ -1,12 +1,12 @@
 # Goose
 
 ```sh
-z sql
-goose sqlite ../entries.db up
+goose sqlite ./entries.db -dir sql/schema up
+goose sqlite ./entries.db -dir sql/schema down
 ```
 
+# SQLC
+
 ```sh
-z sql
-goose sqlite ../entries.db down
 
 ```
