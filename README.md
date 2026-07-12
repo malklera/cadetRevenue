@@ -156,7 +156,42 @@ It is a CLI with the following flags available.
 
 [x] Think if the subcommands should be flagsets or not.
 
+[ ] Check how the db works, need to rework it, for now, leave it as is.
+
+[x] Think which flags are global(target) and belong to a subcommand. show(year, month, day)
+
+[ ] Update all errors to a uniform format.
+
+[x] Ensure data for each day is unique in the database.
+
+[x] Change switch to use ',' for all that have a equal action
+
+[ ] At some point use the `validDate()` to ensure i have possible dates,
+not actually correct ones yet.
+
+[ ] Rework the user input interaction, need a way of going back, always, try to
+make each interaction its own function, just pass the needed checks.
+
+[ ] `processProcedings("T:-2000-3000")` panics, why? fix it
+
+[ ] Calculate the revenue of a given month.
+
+[ ] Change setup for init.
+
+[ ] Remake the database.
+
+[ ] Change the storage of income
+
+
+
+
+
+[ ] Change the name of the originals files, to year-month-n.txt, try to see how
+they get sorted. Has to update `processNote()`.
+
 [ ] Test `validFirstLine`
+
+[ ] When `formatNote()` if there is a space anywhere, strip it.
 
 [ ] All line check should check if there is an entry for the next line.
 
@@ -172,21 +207,6 @@ it is an error if +- or -+
 [ ] Think about this, `m:-200+1600+2600+800+800+1000+1500` is a negative valid if
 it is not the last element?
 
-[ ] Check how the db works, need to rework it, for now, leave it as is.
-
-[x] Think which flags are global(target) and belong to a subcommand. show(year, month, day)
-
-[ ] Change the name of the originals files, to year-month-n.txt, try to see how
-they get sorted. Has to update `processNote()`.
-
-[x] Update all errors to a uniform format.
-
-[ ] Ensure data for each day is unique in the database.
-
-[ ] Replace the use of strings.Split()
-
-[x] Change switch to use ',' for all that have a equal action
-
 [ ] I think when i modify a line in the last line, like 'sabado ... m:' i do not
 add the needed 't:0' below.
 
@@ -196,26 +216,8 @@ t:0
 
 [ ] `Lunes 29/9:` is this an error or consider it like `Lunes 29/9:0`?
 
-[ ] At some point use the `validDate()` to ensure i have possible dates,
-not actually correct ones yet.
-
-[ ] Rework the user input interaction, need a way of going back, always, try to
-make each interaction its own function, just pass the needed checks.
-
-[ ] `processProcedings("T:-2000-3000")` panics, why? fix it
 
 [ ] When testing `formatNote()` ensure it output the first line canon
-
-[ ] When `formatNote()` if there is a space anywhere, strip it.
-
-[ ] Calculate the revenue of a given month.
-
-[ ] Change setup for init.
-
-[ ] Remake the database.
-
-[ ] Change the storage of income
-
 ```
 M:2000+3000+
 4000
