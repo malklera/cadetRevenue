@@ -2,11 +2,11 @@ package main
 
 import (
 	"bufio"
-	"cadetRevenue/db"
+	"context"
+	"database/sql"
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/malklera/sliner/pkg/liner"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -14,6 +14,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"cadetRevenue/internal/database"
+	"github.com/malklera/sliner/pkg/liner"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
@@ -750,7 +754,7 @@ func validDate(date string) bool {
 // processNote accept the name of a file, extract the data from it, return a
 // slice of struct `Entry`, returns at any error, the notes are supposed
 // to be formated
-func processNote(nameNote string) ([]db.Entry, error) {
+func processNote(nameNote string) ([]database.Entry, error) {
 	fmt.Println()
 	fmt.Println("Processing:", nameNote)
 
@@ -874,11 +878,12 @@ func processNotes(target string) error {
 	if err != nil {
 		return fmt.Errorf("listFiles(%s): %w", path, err)
 	}
-	dbInstance, err := db.New("")
+	ctx := context.Background()
+	db, err := sql.Open("sqlite3", "entries.db")
 	if err != nil {
-		return fmt.Errorf("db.New(): %w", err)
+		return fmt.Errorf("sql.Open(\"sqlite3\", \"entries.db\"): %w", err)
 	}
-	defer dbInstance.Close()
+	defer db.Close()
 
 	for n := range listNotes {
 		entries, err := processNote(listNotes[n])
