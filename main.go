@@ -814,51 +814,56 @@ func processNote(nameNote string) ([]db.Entry, error) {
 	return entries, nil
 }
 
-// processProcedings take in a valid string of `procedingsRe`, returns income,
-// expenses, error
-func processProcedings(content string) (int, int, error) {
-	// NOTE: i am currently loosing information, should i return a []int for
-	// procedings and expenses?
+// processProcedings take in a valid string of `procedingsRe`, and extract its values
+func processProcedings(content string, entryID int64) ([]database.Movement, error) {
+	var procedings []database.Movement
 	line := strings.Split(content, ":")
-	lineP := strings.TrimSpace(line[1])
+	shift := line[0]
 
-	procedings := 0
-	expenses := 0
-	// TODO: refactor this into a recursive function that returns []int
+	// m:0
+	// t:2000
+	// t:2000+3000+2500
+	// m:-4500
+	// t:2000+3000+2500-3300
 	switch {
-	case strings.Contains(lineP, "-"):
-		hasExp := strings.Split(lineP, "-")
+	case strings.Contains(line[1], "-"):
+		hasExp := strings.Split(line[1], "-")
 		// NOTE: only allow for one -int, do not need to calculate len
-		exp, err := strconv.Atoi(hasExp[len(hasExp)-1])
+		// i do have to do it because of m:-4500
+		exp, err := strconv.ParseInt(hasExp[len(hasExp)-1], 10, 64)
 		if err != nil {
-			return 0, 0, err
+			return nil, err
 		}
-		expenses = exp * -1
+		proc := database.Movement{EntryID: entryID, Shift: shift, Amount: exp * -1}
+		procedings = append(procedings, proc)
 		if len(hasExp) > 1 && hasExp[0] != "" {
 			for p := range strings.SplitSeq(hasExp[0], "+") {
-				proc, err := strconv.Atoi(p)
+				amount, err := strconv.ParseInt(p, 10, 64)
 				if err != nil {
-					return 0, 0, err
+					return nil, err
 				}
-				procedings += proc
+				proc := database.Movement{EntryID: entryID, Shift: shift, Amount: amount}
+				procedings = append(procedings, proc)
 			}
 		}
-	case strings.Contains(lineP, "+"):
-		for p := range strings.SplitSeq(lineP, "+") {
-			proc, err := strconv.Atoi(p)
+	case strings.Contains(line[1], "+"):
+		for p := range strings.SplitSeq(line[1], "+") {
+			amount, err := strconv.ParseInt(p, 10, 64)
 			if err != nil {
-				return 0, 0, err
+				return nil, err
 			}
-			procedings += proc
+			proc := database.Movement{EntryID: entryID, Shift: shift, Amount: amount}
+			procedings = append(procedings, proc)
 		}
 	default:
-		proc, err := strconv.Atoi(lineP)
+		amount, err := strconv.ParseInt(line[1], 10, 64)
 		if err != nil {
-			return 0, 0, err
+			return nil, err
 		}
-		procedings += proc
+		proc := database.Movement{EntryID: entryID, Shift: shift, Amount: amount}
+		procedings = append(procedings, proc)
 	}
-	return procedings, expenses, nil
+	return procedings, nil
 }
 
 // processNotes process all notes in `formatedDir`, move the notes correctly
