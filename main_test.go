@@ -131,8 +131,8 @@ func TestValidFirstLine(t *testing.T) {
 		// case 1: valid
 		{
 			name:           "valid",
-			content:        []string{"canon 5000"},
-			readInput:      func(s string) (string, error) { return "", nil },
+			content:        []string{"canon 5000", "Lunes 01/01"},
+			readInput:      func(s string) (string, error) { return s, nil },
 			reader:         bufio.NewReader(strings.NewReader("")),
 			wantNewContent: "canon 5000\n",
 			wantN:          1,
@@ -140,36 +140,38 @@ func TestValidFirstLine(t *testing.T) {
 		// case 2: invalid->add->valid
 		{
 			name:           "invalid->add->valid",
-			content:        []string{"Lunes 03/05"},
+			content:        []string{"Lunes 02/02", "m:0"},
 			readInput:      func(s string) (string, error) { return "", nil },
-			reader:         bufio.NewReader(strings.NewReader("canon 5000")),
-			wantNewContent: "canon 5000",
+			reader:         bufio.NewReader(strings.NewReader("1\ncanon 5000\n")),
+			wantNewContent: "canon 5000\n",
 			// TODO: is this ok? or should it be 0
 			wantN: 1,
 		},
 		// case 3: invalid->edit->valid
 		{
-			name:           "invalid->edit->valid",
-			content:        []string{"invalid", "Lunes 03/05"},
-			readInput:      func(s string) (string, error) { return "canon 5000", nil },
-			reader:         bufio.NewReader(strings.NewReader("")),
-			wantNewContent: "canon 5000",
+			name:    "invalid->edit->valid",
+			content: []string{"invalid", "Lunes 03/03", "m:100"},
+			readInput: func(s string) (string, error) {
+				return "canon 5000", nil
+			},
+			reader:         bufio.NewReader(strings.NewReader("2\n")),
+			wantNewContent: "canon 5000\n",
 			wantN:          1,
 		},
 		// case 4: invalid->erase->valid
 		{
 			name:           "invalid->erase->valid",
-			content:        []string{"invalid", "canon 5000"},
+			content:        []string{"invalid", "canon 5000", "Lunes 04/04"},
 			readInput:      func(s string) (string, error) { return "", nil },
-			reader:         bufio.NewReader(strings.NewReader("")),
-			wantNewContent: "",
-			wantN:          1,
+			reader:         bufio.NewReader(strings.NewReader("3\n")),
+			wantNewContent: "canon 5000\n",
+			wantN:          2,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotNewContent, gotN := validFirstLine("placeHolder", tt.content, tt.readInput, tt.reader)
+			gotNewContent, gotN := validFirstLine("fileName", tt.content, tt.readInput, tt.reader)
 			if gotNewContent != tt.wantNewContent {
 				t.Errorf("got: %s, want: %s", gotNewContent, tt.wantNewContent)
 			}
