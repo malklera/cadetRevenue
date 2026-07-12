@@ -29,17 +29,16 @@ var (
 	procedingsRe   = regexp.MustCompile(`^(m|t): *(?:-\d+|\d+(?:\+\d+)*(?:-\d+)?)$`)
 )
 
-// Indicates that there are no .txt files on the current directory
-var errNoFiles = errors.New("there are no files to process")
-
-// Indicates that the user canceled the renaming of a file
-var errRenameCancel = errors.New("renaming canceled")
-
-// Indicates skiping the formatting of the note
-var errSkipNote = errors.New("skip formatting of note")
-
-// Indicates that the given directory is invalid
-var errInvalidDir = errors.New("the given directory is invalid")
+var (
+	// Indicates that there are no .txt files on the current directory
+	errNoFiles = errors.New("there are no files to process")
+	// Indicates that the user canceled the renaming of a file
+	errRenameCancel = errors.New("renaming canceled")
+	// Indicates skiping the formatting of the note
+	errSkipNote = errors.New("skip formatting of note")
+	// Indicates that the given directory is invalid
+	errInvalidDir = errors.New("the given directory is invalid")
+)
 
 const (
 	originalsDir = "originals"
@@ -100,6 +99,7 @@ func main() {
 		}
 		fmt.Printf("Enviroment successfully created at '%s'\n", target)
 		// TODO: When updating the db.go have the creation of the db here
+		// run the goose migration here??
 	case "format":
 		formatCmd.Parse(os.Args[2:])
 		err := formatNotes(target)
@@ -214,7 +214,6 @@ func formatNotes(target string) error {
 			err := formatNote(note)
 			switch err {
 			case nil:
-				// NOTE: break or continue?
 				break
 			case errSkipNote:
 				fmt.Printf("Formating of '%s' skipped\n", note)
@@ -230,7 +229,7 @@ func formatNotes(target string) error {
 	return nil
 }
 
-// listFiles return a slice of [file.Name()]
+// listFiles return a slice of `file.Name()`
 func listFiles(dir string) ([]string, error) {
 	if dir != originalsDir && dir != formatedDir && dir != processedDir {
 		return nil, errInvalidDir
@@ -733,6 +732,7 @@ func validLine(line string) bool {
 // validDate evaluate if the given day `Day dd/mm` has sensible max numbers, dd < 31
 // and mm < 13
 func validDate(date string) bool {
+	// TODO: change this to check for real dates instead
 	parts := strings.Split(date, "/")
 	d, err := strconv.Atoi(parts[0])
 	if err != nil {
