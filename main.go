@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	fileNameRe     = regexp.MustCompile(`^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)-\d{1}-(\d{4})\.txt$`)
+	fileNameRe     = regexp.MustCompile(`^(\d{4})-(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)-\d{1}\.txt$`)
 	canonRe        = regexp.MustCompile(`^canon \d+$`)
 	dayNoWorkRe    = regexp.MustCompile(`^(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado) \d{1,2}\/\d{1,2}: *(0|-\d+)$`)
 	dayWorkRe      = regexp.MustCompile(`^(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado) \d{1,2}\/\d{1,2}$`)
@@ -260,67 +260,58 @@ func validFileName(file string) (string, error) {
 	line := liner.NewLiner()
 	defer line.Close()
 
-	currentFileName := ""
-	renameFor := true
+	currentFileName := file
 
-	// TODO: refactor this
-	for renameFor {
-		currentFileName = file
-		for fileNameRe.MatchString(currentFileName) {
-			// TODO: when changing the file name, change this too
-			fmt.Println()
-			fmt.Printf("'%s' is not a valid file name\n", currentFileName)
-			fmt.Println("The correct format is: month-int-year.txt")
-			fmt.Println("Where 'month' is a valid month written in Spanish word")
-			fmt.Println("Where 'int' is a number from 0 to 9")
-			fmt.Println("Where 'year' is a number from 0000 to 9999")
-			fmt.Printf("> ")
+	for !fileNameRe.MatchString(currentFileName) {
+		fmt.Println()
+		fmt.Printf("'%s' is not a valid file name\n", currentFileName)
+		fmt.Println("The correct format is: year-month-int.txt")
+		fmt.Println("Where 'year' is a number from 0000 to 9999")
+		fmt.Println("Where 'month' is a valid month written in Spanish word")
+		fmt.Println("Where 'int' is a number from 0 to 9")
+		fmt.Printf("> ")
 
-			input, err := line.PrefilledInput(currentFileName, -1)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "error on input: %v\n", err)
-			} else {
-				if _, err := os.Stat(filepath.Join(originalsDir, input)); err == nil {
-					fmt.Printf("File name '%s' already exist, input a different one\n", input)
-				} else if !errors.Is(err, fs.ErrNotExist) {
-					fmt.Fprintf(os.Stderr, "error checking if file '%s' exist: %v\n", input, err)
-				} else {
-					currentFileName = input
-				}
-			}
+		input, err := line.PrefilledInput(currentFileName, -1)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error on input: %v\n", err)
+			continue
 		}
-
-		if file == currentFileName {
-			// use break instead
-			renameFor = false
+		if _, err := os.Stat(filepath.Join(originalsDir, input)); err == nil {
+			fmt.Printf("File name '%s' already exist, input a different one\n", input)
+		} else if !errors.Is(err, fs.ErrNotExist) {
+			fmt.Fprintf(os.Stderr, "error checking if file '%s' exist: %v\n", input, err)
 		} else {
-			retry := true
-			for retry {
-				if err := os.Rename(filepath.Join(originalsDir, file), filepath.Join(originalsDir, currentFileName)); err != nil {
-					fmt.Fprintf(os.Stderr, "error renaming file '%s' to '%s': %v\n", file, currentFileName, err)
-					fmt.Println("Do you want to retry? (y/n)")
-					fmt.Print("> ")
-					opt, err := reader.ReadString('\n')
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "error reading input: %v\n", err)
-					} else {
-						opt = strings.TrimSpace(opt)
-						switch opt {
-						case "y", "Y":
-							break
-						case "n", "N":
-							return file, errRenameCancel
-						default:
-							fmt.Fprintf(os.Stderr, "'%s' is an invalid option.\n", opt)
-						}
-					}
-				} else {
-					fmt.Println()
-					fmt.Printf("File '%s' succesfull renamed to '%s'\n", file, currentFileName)
-					retry = false
-					renameFor = false
+			currentFileName = input
+		}
+	}
+
+	if file == currentFileName {
+		return file, nil
+	}
+
+	for {
+		if err := os.Rename(filepath.Join(originalsDir, file), filepath.Join(originalsDir, currentFileName)); err != nil {
+			fmt.Fprintf(os.Stderr, "error renaming file '%s' to '%s': %v\n", file, currentFileName, err)
+			fmt.Println("Do you want to retry? (y/n)")
+			fmt.Print("> ")
+			opt, err := reader.ReadString('\n')
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "error reading input: %v\n", err)
+			} else {
+				opt = strings.TrimSpace(opt)
+				switch opt {
+				case "y", "Y":
+					break
+				case "n", "N":
+					return file, errRenameCancel
+				default:
+					fmt.Fprintf(os.Stderr, "'%s' is an invalid option.\n", opt)
 				}
 			}
+		} else {
+			fmt.Println()
+			fmt.Printf("File '%s' succesfull renamed to '%s'\n", file, currentFileName)
+			break
 		}
 	}
 	return currentFileName, nil
