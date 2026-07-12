@@ -2,8 +2,8 @@ package main
 
 import (
 	"bufio"
-	"context"
-	"database/sql"
+	// "context"
+	// "database/sql"
 	"errors"
 	"flag"
 	"fmt"
@@ -13,7 +13,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
+	// "time"
 
 	"cadetRevenue/internal/database"
 	"github.com/malklera/sliner/pkg/liner"
@@ -113,19 +113,19 @@ func main() {
 		}
 	case "process":
 		processCmd.Parse(os.Args[2:])
-		err := processNotes(target)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error formating notes at `%s`: %v", target, err)
-			os.Exit(1)
-		}
+		// err := processNotes(target)
+		// if err != nil {
+		// 	fmt.Fprintf(os.Stderr, "Error formating notes at `%s`: %v", target, err)
+		// 	os.Exit(1)
+		// }
 	case "show":
 		fmt.Println("show")
 		showCmd.Parse(os.Args[2:])
-		err := showEntries(target, year, month, day)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "showEntries(%s, %d, %d, %d)", target, year, month, day)
-			os.Exit(1)
-		}
+		// err := showEntries(target, year, month, day)
+		// if err != nil {
+		// 	fmt.Fprintf(os.Stderr, "showEntries(%s, %d, %d, %d)", target, year, month, day)
+		// 	os.Exit(1)
+		// }
 	default:
 		fmt.Fprintln(os.Stderr, "wrong sub-command.")
 		setupCmd.Usage()
@@ -284,6 +284,8 @@ func formatNote(nameNote string) error {
 	}
 
 	newContent, lineN := validFirstLine(nameNote, content, linerInput, bufio.NewReader(os.Stdin))
+
+	reader := bufio.NewReader(os.Stdin)
 
 	// check each line after the first, for non-valid ones allow user to erase or modify
 	for lineN < len(content) {
@@ -580,6 +582,7 @@ func validFirstLine(nameNote string,
 // nextLineInvalid prompt choosing if erasing the line below(return 1) or
 // leaving it for later modification(return 0)
 func nextLineInvalid(nameNote string, cl string, nl string) int {
+	reader := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Println()
 		fmt.Println("File:", nameNote)
@@ -686,72 +689,72 @@ func validDate(date string) bool {
 // processNote accept the name of a file, extract the data from it, return a
 // slice of struct `Entry`, returns at any error, the notes are supposed
 // to be formated
-func processNote(nameNote string) ([]database.Entry, error) {
-	fmt.Println()
-	fmt.Println("Processing:", nameNote)
-
-	orgNote := filepath.Join(formatedDir, nameNote)
-	data, err := os.ReadFile(orgNote)
-	if err != nil {
-		return nil, fmt.Errorf("os.ReadFile(%s): %w", orgNote, err)
-	}
-	content := strings.Split(string(data), "\n")
-
-	// TODO: when i change the name of the file, this has to be updated
-	// validate the name first
-	// Get the year
-	year := fileNameRe.FindStringSubmatch(nameNote)[2]
-
-	canon := int64(0)
-
-	entries := make([]database.Entry, 0, 6)
-	movements := make([]database.Movement, 0, 12)
-	n := 0
-	for n < len(content) {
-		var entry database.Entry
-		var movement database.Movement
-		entry.Canon = canon
-		date := year + "-"
-		switch {
-		case canonRe.MatchString(content[n]):
-			line := strings.Split(content[n], " ")
-
-			canon, err = strconv.ParseInt(line[1], 10, 64)
-			if err != nil {
-				return nil, fmt.Errorf("canonRe.MatchString(%s): strconv.Atoi(%s): %w", content[n], line[1], err)
-			}
-			n++
-		case dayWorkRe.MatchString(content[n]):
-			// CONTINUE HERE
-			_, cDate, _ := strings.Cut(content[n], " ")
-			day, month, _ := strings.Cut(cDate, "/")
-			date += month + "-" + day
-			entry.Date, err = time.Parse(time.DateOnly, date)
-			if err != nil {
-				return nil, fmt.Errorf("dayWorkRe.MatchString(%s): time.Parse(%s, %s): %w", content[n], time.DateOnly, date, err)
-			}
-			n++
-			// here process the procedings and advance the counter
-			expensesM := 0
-			entry.IncomeM, expensesM, err = processProcedings(content[n])
-			if err != nil {
-				return nil, fmt.Errorf("dayWorkRe.MatchString(%s): processProcedings(%s): %w", content[n-1], content[n], err)
-			}
-			n++
-			expensesT := 0
-			entry.IncomeT, expensesT, err = processProcedings(content[n])
-			if err != nil {
-				return nil, fmt.Errorf("dayWorkRe.MatchString(%s): processProcedings(%s): %w", content[n-2], content[n], err)
-			}
-			n++
-			entry.Expenses = expensesM + expensesT
-			entries = append(entries, entry)
-		default:
-			return nil, fmt.Errorf("line '%s' of file '%s' has the wrong format", content[n], nameNote)
-		}
-	}
-	return entries, nil
-}
+// func processNote(nameNote string) ([]database.Entry, error) {
+// 	fmt.Println()
+// 	fmt.Println("Processing:", nameNote)
+//
+// 	orgNote := filepath.Join(formatedDir, nameNote)
+// 	data, err := os.ReadFile(orgNote)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("os.ReadFile(%s): %w", orgNote, err)
+// 	}
+// 	content := strings.Split(string(data), "\n")
+//
+// 	// TODO: when i change the name of the file, this has to be updated
+// 	// validate the name first
+// 	// Get the year
+// 	year := fileNameRe.FindStringSubmatch(nameNote)[2]
+//
+// 	canon := int64(0)
+//
+// 	entries := make([]database.Entry, 0, 6)
+// 	movements := make([]database.Movement, 0, 12)
+// 	n := 0
+// 	for n < len(content) {
+// 		var entry database.Entry
+// 		var movement database.Movement
+// 		entry.Canon = canon
+// 		date := year + "-"
+// 		switch {
+// 		case canonRe.MatchString(content[n]):
+// 			line := strings.Split(content[n], " ")
+//
+// 			canon, err = strconv.ParseInt(line[1], 10, 64)
+// 			if err != nil {
+// 				return nil, fmt.Errorf("canonRe.MatchString(%s): strconv.Atoi(%s): %w", content[n], line[1], err)
+// 			}
+// 			n++
+// 		case dayWorkRe.MatchString(content[n]):
+// 			// CONTINUE HERE
+// 			_, cDate, _ := strings.Cut(content[n], " ")
+// 			day, month, _ := strings.Cut(cDate, "/")
+// 			date += month + "-" + day
+// 			entry.Date, err = time.Parse(time.DateOnly, date)
+// 			if err != nil {
+// 				return nil, fmt.Errorf("dayWorkRe.MatchString(%s): time.Parse(%s, %s): %w", content[n], time.DateOnly, date, err)
+// 			}
+// 			n++
+// 			// here process the procedings and advance the counter
+// 			expensesM := 0
+// 			entry.IncomeM, expensesM, err = processProcedings(content[n])
+// 			if err != nil {
+// 				return nil, fmt.Errorf("dayWorkRe.MatchString(%s): processProcedings(%s): %w", content[n-1], content[n], err)
+// 			}
+// 			n++
+// 			expensesT := 0
+// 			entry.IncomeT, expensesT, err = processProcedings(content[n])
+// 			if err != nil {
+// 				return nil, fmt.Errorf("dayWorkRe.MatchString(%s): processProcedings(%s): %w", content[n-2], content[n], err)
+// 			}
+// 			n++
+// 			entry.Expenses = expensesM + expensesT
+// 			entries = append(entries, entry)
+// 		default:
+// 			return nil, fmt.Errorf("line '%s' of file '%s' has the wrong format", content[n], nameNote)
+// 		}
+// 	}
+// 	return entries, nil
+// }
 
 // processProcedings take in a valid string of `procedingsRe`, and extract its values
 func processProcedings(content string, entryID int64) ([]database.Movement, error) {
@@ -807,61 +810,61 @@ func processProcedings(content string, entryID int64) ([]database.Movement, erro
 
 // processNotes process all notes in `formatedDir`, move the notes correctly
 // formated to `processedDir`.
-func processNotes(target string) error {
-	path := filepath.Join(target, formatedDir)
-	listNotes, err := listFiles(path)
-	if err != nil {
-		return fmt.Errorf("listFiles(%s): %w", path, err)
-	}
-	ctx := context.Background()
-	db, err := sql.Open("sqlite3", "entries.db")
-	if err != nil {
-		return fmt.Errorf("sql.Open(\"sqlite3\", \"entries.db\"): %w", err)
-	}
-	defer db.Close()
+// func processNotes(target string) error {
+// 	path := filepath.Join(target, formatedDir)
+// 	listNotes, err := listFiles(path)
+// 	if err != nil {
+// 		return fmt.Errorf("listFiles(%s): %w", path, err)
+// 	}
+// 	ctx := context.Background()
+// 	db, err := sql.Open("sqlite3", "entries.db")
+// 	if err != nil {
+// 		return fmt.Errorf("sql.Open(\"sqlite3\", \"entries.db\"): %w", err)
+// 	}
+// 	defer db.Close()
+//
+// 	for n := range listNotes {
+// 		entries, err := processNote(listNotes[n])
+// 		if err != nil {
+// 			fmt.Fprintf(os.Stderr, "error processing note '%s': %v\n", listNotes[n], err)
+// 			continue
+// 		}
+// 		// TODO: check this function again, do i want to open the database for each note or for all?
+// 		moveNote := true
+// 		for _, e := range entries {
+// 			if err := db.AddEntry(dbInstance, e); err != nil {
+// 				fmt.Fprintf(os.Stderr, "error adding entry '%v' to the database: %v\n", e.Date, err)
+// 				moveNote = false
+// 				break
+// 			}
+// 		}
+// 		if moveNote {
+// 			if err := os.Rename(filepath.Join(formatedDir, listNotes[n]), filepath.Join(processedDir, listNotes[n])); err != nil {
+// 				fmt.Fprintf(os.Stderr, "error moving formated note to the processed directory: %v\n", err)
+// 			}
+// 		}
+// 	}
+// 	return nil
+// }
 
-	for n := range listNotes {
-		entries, err := processNote(listNotes[n])
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "error processing note '%s': %v\n", listNotes[n], err)
-			continue
-		}
-		// TODO: check this function again, do i want to open the database for each note or for all?
-		moveNote := true
-		for _, e := range entries {
-			if err := db.AddEntry(dbInstance, e); err != nil {
-				fmt.Fprintf(os.Stderr, "error adding entry '%v' to the database: %v\n", e.Date, err)
-				moveNote = false
-				break
-			}
-		}
-		if moveNote {
-			if err := os.Rename(filepath.Join(formatedDir, listNotes[n]), filepath.Join(processedDir, listNotes[n])); err != nil {
-				fmt.Fprintf(os.Stderr, "error moving formated note to the processed directory: %v\n", err)
-			}
-		}
-	}
-	return nil
-}
-
-func showEntries(target string, year int, month int, day int) error {
-	dbInstance, err := db.New(target)
-	if err != nil {
-		return fmt.Errorf("db.New(%s): %v", target, err)
-	}
-	// TODO: has to change this
-	entries, err := db.ShowAll(dbInstance)
-	if err != nil {
-		return fmt.Errorf("db.ShowAll(dbInstance): %v", err)
-	}
-	displayEntries(entries)
-	return nil
-}
+// func showEntries(target string, year int, month int, day int) error {
+// 	dbInstance, err := db.New(target)
+// 	if err != nil {
+// 		return fmt.Errorf("db.New(%s): %v", target, err)
+// 	}
+// 	// TODO: has to change this
+// 	entries, err := db.ShowAll(dbInstance)
+// 	if err != nil {
+// 		return fmt.Errorf("db.ShowAll(dbInstance): %v", err)
+// 	}
+// 	displayEntries(entries)
+// 	return nil
+// }
 
 // displayEntries pretty print to stdout the given entry
-func displayEntries(entries []db.Entry) {
-	fmt.Println("Date	Canon	In. Morning	In. Afternoon	Expenses")
-	for _, e := range entries {
-		fmt.Printf("%v	%d	%d	%d	%d\n", e.Date, e.Canon, e.IncomeM, e.IncomeT, e.Expenses)
-	}
-}
+// func displayEntries(entries []db.Entry) {
+// 	fmt.Println("Date	Canon	In. Morning	In. Afternoon	Expenses")
+// 	for _, e := range entries {
+// 		fmt.Printf("%v	%d	%d	%d	%d\n", e.Date, e.Canon, e.IncomeM, e.IncomeT, e.Expenses)
+// 	}
+// }
