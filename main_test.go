@@ -1,9 +1,6 @@
 package main
 
 import (
-	"errors"
-	"os"
-	"strconv"
 	"testing"
 )
 
@@ -42,7 +39,7 @@ func TestValidLine(t *testing.T) {
 		{"m:2000", true},
 		{"t:2000+2000", true},
 		{"m:-4500", true},
-		{"viernes 3/10 canon 7500", true}, // this is false
+		{"viernes 3/10 canon 7500", true}, // TODO: this is false
 		{"m:2500+2200+2500+6000+2000+4000+4000+2000-14800", true},
 		{"t: 2000+5000+2000+2000+2000+3000+2500-3300", true},
 		{"canon", false},
@@ -119,14 +116,3 @@ func TestValidDate(t *testing.T) {
 // 		})
 // 	}
 // }
-
-func TestValidFileName(t *testing.T) {
-	var fileFunc = []struct {
-		file      string
-		readInput func(string) (string, error)
-		stat      func(string) (os.FileInfo, error)
-		rename    func(string, string) error
-	}{
-		{"", func("") ("", )},
-	}
-}
