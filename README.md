@@ -186,8 +186,10 @@ make each interaction its own function, just pass the needed checks.
 
 
 
-[ ] Change the name of the originals files, to year-month-n.txt, try to see how
+[x] Change the name of the originals files, to year-month-n.txt, try to see how
 they get sorted. Has to update `processNote()`.
+
+[ ] fix `validFirstLine()`
 
 [ ] Test `validFirstLine`
 
@@ -215,7 +217,6 @@ line or the formated one, currently i show the original, so original: T:0, forma
 t:0
 
 [ ] `Lunes 29/9:` is this an error or consider it like `Lunes 29/9:0`?
-
 
 [ ] When testing `formatNote()` ensure it output the first line canon
 ```

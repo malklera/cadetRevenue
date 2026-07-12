@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-
-	"github.com/malklera/sliner/pkg/liner"
 )
 
 var (
@@ -18,14 +16,6 @@ var (
 	// a Spanish month name (e.g., enero, febrero, ..., diciembre) and D is a
 	// single digit (0-9). Example: 2024-enero-3.txt
 	fileNameRe = regexp.MustCompile(`^(\d{4})-(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)-\d{1}\.txt$`)
-
-	// fileInput reads user input using a line editor with the current filename
-	// pre-filled, allowing the user to edit it. Returns the new input or an error.
-	fileInput = func(current string) (string, error) {
-		line := liner.NewLiner()
-		defer line.Close()
-		return line.PrefilledInput(current, -1)
-	}
 
 	fileStat   = os.Stat
 	fileRename = os.Rename
