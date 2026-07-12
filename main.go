@@ -45,7 +45,12 @@ const (
 	processedDir = "processed"
 )
 
-var reader = bufio.NewReader(os.Stdin)
+// linerInput acepts a string and allow the user to change it
+var linerInput = func(current string) (string, error) {
+	line := liner.NewLiner()
+	defer line.Close()
+	return line.PrefilledInput(current, -1)
+}
 
 func main() {
 	target := "."
@@ -207,7 +212,7 @@ func formatNotes(target string) error {
 		return fmt.Errorf("listFiles(%s): %w", path, err)
 	}
 	for n := range notes {
-		note, err := validFileName(notes[n], readInput, fileStat, fileRename)
+		note, err := validFileName(notes[n], linerInput, fileStat, fileRename, bufio.NewReader(os.Stdin))
 		switch err {
 		case nil:
 			err := formatNote(note)
@@ -253,8 +258,6 @@ func listFiles(dir string) ([]string, error) {
 	return textFiles, nil
 }
 
-
-
 // NOTE: Maybe i should reformat checkFormatNote
 
 // formatNote accept the name of a file, allow to modify or cancel the modification, return
@@ -280,7 +283,7 @@ func formatNote(nameNote string) error {
 		content = content[:len(content)-1]
 	}
 
-	newContent, lineN := validFirstLine(nameNote, content)
+	newContent, lineN := validFirstLine(nameNote, content, linerInput, bufio.NewReader(os.Stdin))
 
 	// check each line after the first, for non-valid ones allow user to erase or modify
 	for lineN < len(content) {
@@ -504,7 +507,11 @@ func formatNote(nameNote string) error {
 }
 
 // validFirstLine ensures the first line of a note is the canon.
-func validFirstLine(nameNote string, content []string) (string, int) {
+func validFirstLine(nameNote string,
+	content []string,
+	readInput func(string) (string, error),
+	reader *bufio.Reader,
+) (string, int) {
 	newContent := ""
 	lineN := 0
 
@@ -520,6 +527,8 @@ func validFirstLine(nameNote string, content []string) (string, int) {
 		fmt.Println("File:", nameNote)
 		fmt.Println("Current first line:")
 		fmt.Println(content[lineN])
+		fmt.Println("Next line:")
+		fmt.Println(content[lineN+1])
 		fmt.Println("Choose operation")
 		fmt.Println("1- Add line above")
 		fmt.Println("2- Edit line")
@@ -534,38 +543,32 @@ func validFirstLine(nameNote string, content []string) (string, int) {
 		switch opt {
 		case "1":
 			// NOTE: How is the user suppose to know what the canon should be?
-			for {
-				fmt.Println("New line:")
-				fmt.Print("> ")
-				line, err := reader.ReadString('\n')
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "error reading input: %v\n", err)
-					continue
-				}
-				line = strings.TrimSpace(line)
-				if canonRe.MatchString(line) {
-					newContent += line + "\n"
-					lineN++
-					return newContent, lineN
-				}
-				fmt.Fprintf(os.Stderr, "'%s' is an invalid line\n", line)
+			fmt.Println("New line:")
+			fmt.Print("> ")
+			line, err := reader.ReadString('\n')
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "error reading input: %v\n", err)
+				continue
 			}
+			line = strings.TrimSpace(line)
+			if canonRe.MatchString(line) {
+				newContent += line + "\n"
+				lineN++
+				return newContent, lineN
+			}
+			fmt.Fprintf(os.Stderr, "'%s' is an invalid line\n", line)
 		case "2":
-			line := liner.NewLiner()
-			defer line.Close()
-			for {
-				input, err := line.PrefilledInput(content[lineN], -1)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "error on input: %v\n", err)
-					continue
-				}
-				if canonRe.MatchString(input) {
-					newContent += input + "\n"
-					lineN++
-					return newContent, lineN
-				}
-				fmt.Fprintf(os.Stderr, "'%s' is an invalid line\n", input)
+			input, err := readInput(content[lineN])
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "error on input: %v\n", err)
+				continue
 			}
+			if canonRe.MatchString(input) {
+				newContent += input + "\n"
+				lineN++
+				return newContent, lineN
+			}
+			fmt.Fprintf(os.Stderr, "'%s' is an invalid line\n", input)
 		case "3":
 			lineN++
 		default:
