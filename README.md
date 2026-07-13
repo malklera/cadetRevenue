@@ -182,16 +182,18 @@ make each interaction its own function, just pass the needed checks.
 
 [ ] Change the storage of income
 
-
+[ ] Test `createEnv`
 
 
 
 [x] Change the name of the originals files, to year-month-n.txt, try to see how
 they get sorted. Has to update `processNote()`.
 
-[ ] fix `validFirstLine()`
+[x] fix `validFirstLine()`
 
-[ ] Test `validFirstLine`
+[x] Test `validFirstLine`
+
+[ ] Refactor moving related functions to their own file.
 
 [ ] When `formatNote()` if there is a space anywhere, strip it.
 
