@@ -124,3 +124,28 @@ func main() {
 		os.Exit(1)
 	}
 }
+
+// listFiles return a slice of `file.Name()`
+func listFiles(dir string) ([]string, error) {
+	if dir != originalsDir && dir != formatedDir && dir != processedDir {
+		return nil, errInvalidDir
+	}
+	allFiles, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, fmt.Errorf("os.ReadDir(%s): %w", dir, err)
+	}
+
+	textFiles := make([]string, 0, len(allFiles))
+
+	for _, file := range allFiles {
+		if !file.IsDir() && strings.HasSuffix(file.Name(), ".txt") {
+			textFiles = append(textFiles, file.Name())
+		}
+	}
+
+	if len(textFiles) == 0 {
+		return nil, errNoFiles
+	}
+
+	return textFiles, nil
+}
