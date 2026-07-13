@@ -79,17 +79,11 @@ func formatNote(nameNote string) error {
 		case dayNoWorkRe.MatchString(content[lineN]):
 			day := strings.Split(content[lineN], ":")
 			newContent += addPadding(day[0]) + "\n"
-			newContent += "m:" + day[1] + "\n"
+			// remove whitespace
+			newContent += "m:" + strings.ReplaceAll(day[1], " ", "") + "\n"
 			newContent += "t:0" + "\n"
-			switch {
-			case lineN+1 == len(content):
+			if lineN+1 == len(content) {
 				newContent, _ = strings.CutSuffix(newContent, "\n")
-			case canonRe.MatchString(content[lineN+1]), dayNoWorkRe.MatchString(content[lineN+1]),
-				dayWorkRe.MatchString(content[lineN+1]), dayWorkCanonRe.MatchString(content[lineN+1]):
-				break
-			default:
-				// error, the next line is invalid
-				lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1])
 			}
 			lineN++
 		case dayWorkRe.MatchString(content[lineN]):
