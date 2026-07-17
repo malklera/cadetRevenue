@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 
 	"github.com/malklera/sliner/pkg/liner"
 	_ "github.com/mattn/go-sqlite3"
@@ -15,8 +16,8 @@ var (
 	canonRe        = regexp.MustCompile(`^canon \d+$`)
 	dayNoWorkRe    = regexp.MustCompile(`^(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado) \d{1,2}\/\d{1,2}: *(0|-\d+)$`)
 	dayWorkRe      = regexp.MustCompile(`^(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado) \d{1,2}\/\d{1,2}$`)
-	dayWorkCanonRe = regexp.MustCompile(`^(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado) (\d{1,2}\/\d{1,2}) (canon \d+)$`)
-	procedingsRe   = regexp.MustCompile(`^(m|t): *(?:-\d+|\d+(?:\+\d+)*(?:-\d+)?)$`)
+	morningRe      = regexp.MustCompile(`^m: *(?:-\d+|\d+(?:\+\d+)*(?:-\d+)?)$`)
+	afternoonRe    = regexp.MustCompile(`^t: *(?:-\d+|\d+(?:\+\d+)*(?:-\d+)?)$`)
 )
 
 var (
