@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-
-	"github.com/malklera/sliner/pkg/liner"
 )
 
 // formatNotes validates file names in `originalsDir` and call `checkFormatNote`
@@ -66,105 +64,17 @@ func formatNote(nameNote string) error {
 
 	newContent, lineN := validFirstLine(nameNote, content, linerInput, bufio.NewReader(os.Stdin))
 
-	reader := bufio.NewReader(os.Stdin)
-
 	// check each line after the first, for non-valid ones allow user to erase or modify
 	for lineN < len(content) {
-		switch {
-		case content[lineN] == "":
-			lineN++
-		case canonRe.MatchString(content[lineN]):
-			newContent += content[lineN] + "\n"
-			lineN++
-		case dayNoWorkRe.MatchString(content[lineN]):
-			day := strings.Split(content[lineN], ":")
-			newContent += addPadding(day[0]) + "\n"
-			// remove whitespace
-			newContent += "m:" + strings.ReplaceAll(day[1], " ", "") + "\n"
-			newContent += "t:0" + "\n"
-			if lineN+1 == len(content) {
-				newContent, _ = strings.CutSuffix(newContent, "\n")
-			}
-			lineN++
-		case dayWorkRe.MatchString(content[lineN]):
-			newContent += addPadding(content[lineN]) + "\n"
-			nC, j := fillNoEntry(nameNote, content, newContent, lineN)
-			newContent += nC
-			lineN += j
-			lineN++
-		case dayWorkCanonRe.MatchString(content[lineN]):
-			subStrings := dayWorkCanonRe.FindStringSubmatch(content[lineN])
-			newContent += subStrings[3] + "\n" + addPadding(subStrings[1]+" "+subStrings[2]) + "\n"
-			nC, j := fillNoEntry(nameNote, content, newContent, lineN)
-			newContent += nC
-			lineN += j
-			lineN++
-		case procedingsRe.MatchString(content[lineN]):
-			newContent += content[lineN] + "\n"
-			switch {
-			case lineN+1 == len(content):
-				newContent += "t:0"
-			case procedingsRe.MatchString(content[lineN+1]), canonRe.MatchString(content[lineN+1]),
-				dayNoWorkRe.MatchString(content[lineN+1]), dayWorkRe.MatchString(content[lineN+1]),
-				dayWorkCanonRe.MatchString(content[lineN+1]):
-				break
-			default:
-				// error, the next line is invalid
-				lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1])
-			}
-			lineN++
-		default:
-			// Non valid line
-			proceed := true
-			for proceed {
-				fmt.Println()
-				fmt.Println("File:", nameNote)
-				fmt.Println("Current line:")
-				fmt.Println(content[lineN])
-				fmt.Println("The line is invalid")
-				fmt.Println("Choose what to do")
-				fmt.Println("1- Erase line")
-				fmt.Println("2- Modify")
-				fmt.Println("3- Skip note (need to manually change something about the note)")
-				fmt.Print("> ")
-				opt, err := reader.ReadString('\n')
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "error reading input: %v\n", err)
-					continue
-				}
-				opt = strings.TrimSpace(opt)
-				switch opt {
-				case "1":
-					proceed = false
-				case "2":
-					line := liner.NewLiner()
-					defer line.Close()
-					for {
-						fmt.Println("Modify the line and press Enter")
-						input, err := line.PrefilledInput(content[lineN], -1)
-						if err != nil {
-							fmt.Fprintf(os.Stderr, "error on input: %v\n", err)
-							continue
-						}
-						if validLine(input) {
-							newContent += input + "\n"
-							if lineN == len(content)-1 {
-								newContent += "t:0"
-							}
-							break
-						}
-						fmt.Printf("'%s'\n is not a valid line\n", input)
-					}
-					proceed = false
-				case "3":
-					return errSkipNote
-				default:
-					fmt.Fprintf(os.Stderr, "'%s' is an invalid option.\n", opt)
-				}
-			}
-			lineN++
+		n, line, err := formatLine(nameNote, content, lineN)
+		if err != nil {
+			return err
 		}
+		newContent += line
+		lineN += n
 	}
+
+	newContent, _ = strings.CutSuffix(newContent, "\n")
 
 	// Move the file
 
@@ -408,10 +318,10 @@ func nextLineInvalid(nameNote string, currentLine string, nextLine string) int {
 // validLine evaluate if the given line conform to any of the declared regex's
 func validLine(line string) bool {
 	switch {
-	case canonRe.MatchString(line), procedingsRe.MatchString(line):
+	case canonRe.MatchString(line), morningRe.MatchString(line),
+		afternoonRe.MatchString(line):
 		return true
-	case dayNoWorkRe.MatchString(line), dayWorkRe.MatchString(line),
-		dayWorkCanonRe.MatchString(line):
+	case dayNoWorkRe.MatchString(line), dayWorkRe.MatchString(line):
 		day := strings.Split(line, " ")
 		date, _, _ := strings.Cut(day[1], ":")
 		return validDate(date)
@@ -420,20 +330,20 @@ func validLine(line string) bool {
 	}
 }
 
-// fillNoEntry fill with 0 if there are no procedings in the next line, or prompt
+// fillNoProcedings fill with 0 if there are no procedings in the next line, or prompt
 // for input if `nextLineInvalid`
-func fillNoEntry(nameNote string, content []string, newContent string, n int) (string, int) {
+func fillNoProcedings(nameNote string, content []string, newContent string, n int) (string, int) {
 	switch {
 	case n+1 > len(content):
 		fmt.Println()
 		fmt.Println("File:", nameNote)
 		fmt.Println("Current line:")
 		fmt.Println(content[n])
-		fmt.Println("There are no entries for procedings, will be filled with 0")
-		newContent += "m:0" + "\n"
-		newContent += "t:0" + "\n"
+		fmt.Println("End of file with no procedings for the day, will be filled with 0")
+		newContent += "m:0\n"
+		newContent += "t:0\n"
 		return newContent, 0
-	case procedingsRe.MatchString(content[n+1]):
+	case morningRe.MatchString(content[n+1]):
 		return "", 0
 	default:
 		return "", nextLineInvalid(nameNote, content[n], content[n+1])
@@ -460,4 +370,131 @@ func validDate(date string) bool {
 		return false
 	}
 	return true
+}
+
+// formatLine check that `lineN` and `lineN+1` of `content` are valid, return
+// the number of lines to advance, the valid line to save, the only error it may
+// return is `errSkipNote`
+func formatLine(nameNote string, content []string, lineN int) (int, string, error) {
+	line := ""
+	switch {
+	case content[lineN] == "":
+		return lineN + 1, "", nil
+	case canonRe.MatchString(content[lineN]):
+		switch {
+		case lineN+1 == len(content):
+			return lineN + 1, "", nil
+		case dayWorkRe.MatchString(content[lineN+1]),
+			dayNoWorkRe.MatchString(content[lineN+1]):
+			return lineN + 1, content[lineN], nil
+		default:
+			lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1])
+			return lineN + 1, content[lineN], nil
+		}
+	case dayNoWorkRe.MatchString(content[lineN]):
+		switch {
+		case dayWorkRe.MatchString(content[lineN+1]),
+			dayNoWorkRe.MatchString(content[lineN+1]),
+			canonRe.MatchString(content[lineN+1]),
+			lineN+1 == len(content):
+			day := strings.Split(content[lineN], ":")
+			line += addPadding(day[0]) + "\n"
+			// remove whitespace
+			line += "m:" + strings.ReplaceAll(day[1], " ", "") + "\n"
+			line += "t:0\n"
+			return lineN + 1, line, nil
+		default:
+			lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1])
+			return lineN + 1, content[lineN], nil
+		}
+	case dayWorkRe.MatchString(content[lineN]):
+		line += addPadding(content[lineN]) + "\n"
+		switch {
+		case lineN+1 == len(content):
+			line += "m:0\n"
+			line += "t:0\n"
+		case morningRe.MatchString(content[lineN+1]):
+			break
+		default:
+			lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1])
+		}
+		return lineN + 1, line, nil
+	case morningRe.MatchString(content[lineN]):
+		line += content[lineN] + "\n"
+		switch {
+		case afternoonRe.MatchString(content[lineN+1]):
+			break
+		case canonRe.MatchString(content[lineN+1]),
+			dayNoWorkRe.MatchString(content[lineN+1]),
+			dayWorkRe.MatchString(content[lineN+1]),
+			lineN+1 == len(content):
+			line += "t:0\n"
+		default:
+			lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1])
+		}
+		return lineN + 1, line, nil
+	case afternoonRe.MatchString(content[lineN]):
+		line += content[lineN] + "\n"
+		switch {
+		case lineN+1 == len(content),
+			canonRe.MatchString(content[lineN+1]),
+			dayNoWorkRe.MatchString(content[lineN+1]),
+			dayWorkRe.MatchString(content[lineN+1]):
+			break
+		default:
+			lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1])
+		}
+		return lineN + 1, line, nil
+	default:
+		line, err := invalidLine(nameNote, content[lineN], linerInput, bufio.NewReader(os.Stdin))
+		return lineN + 1, line, err
+	}
+}
+
+// invalidLine show an invalid line and prompt the user to choose what to do,
+// return a valid line or error
+func invalidLine(nameNote string,
+	content string,
+	readInput func(string) (string, error),
+	reader *bufio.Reader,
+) (string, error) {
+	for {
+		fmt.Println()
+		fmt.Println("File:", nameNote)
+		fmt.Println("Current line:")
+		fmt.Println(content)
+		fmt.Println("The line is invalid")
+		fmt.Println("Choose what to do")
+		fmt.Println("1- Erase line")
+		fmt.Println("2- Modify")
+		fmt.Println("3- Skip note (need to manually change something about the note)")
+		fmt.Print("> ")
+		opt, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error reading input: %v\n", err)
+			continue
+		}
+		opt = strings.TrimSpace(opt)
+		switch opt {
+		case "1":
+			return "", nil
+		case "2":
+			for {
+				fmt.Println("Modify the line and press Enter")
+				input, err := readInput(content)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "error on input: %v\n", err)
+					continue
+				}
+				if validLine(input) {
+					return input + "\n", nil
+				}
+				fmt.Printf("'%s'\n is not a valid line\n", input)
+			}
+		case "3":
+			return "", errSkipNote
+		default:
+			fmt.Fprintf(os.Stderr, "'%s' is an invalid option.\n", opt)
+		}
+	}
 }

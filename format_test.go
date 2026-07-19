@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -103,8 +104,9 @@ func TestValidLine(t *testing.T) {
 		{"miércoles 1/10", true},
 		{"m:2000", true},
 		{"t:2000+2000", true},
+		{"t:-2000+2000", false},
 		{"m:-4500", true},
-		{"viernes 3/10 canon 7500", true}, // TODO: this is false
+		{"viernes 3/10 canon 7500", false},
 		{"m:2500+2200+2500+6000+2000+4000+4000+2000-14800", true},
 		{"t: 2000+5000+2000+2000+2000+3000+2500-3300", true},
 		{"canon", false},
@@ -116,7 +118,7 @@ func TestValidLine(t *testing.T) {
 		{"viernes -3/13", false},
 		{"viernes 3/-13", false},
 		{"viernes 3/0", false},
-		{"m:2000++2500+4500+4500+4000-2000", false}, // TODO: if i update the regex, will have to change this
+		{"m:2000++2500+4500+4500+4000-2000", false},
 	}
 
 	for _, tt := range lines {
@@ -148,6 +150,141 @@ func TestValidDate(t *testing.T) {
 			ans := validDate(tt.date)
 			if ans != tt.want {
 				t.Errorf("got '%t', want '%t'", ans, tt.want)
+			}
+		})
+	}
+}
+
+// func TestFormatNote(t *testing.T){
+//
+// }
+
+func TestFormatLine(t *testing.T) {
+	var tests = []struct {
+		name     string
+		nameNote string
+		content  []string
+		lineN    int
+		wantN    int
+		wantLine string
+		wantErr  error
+	}{
+		{"emptyLine", "nameNote", []string{"", "canon 300"}, 0, 1, "", nil},
+		{"canonRe->dayWorkRe", "nameNote", []string{"canon 350", "lunes 01/01", "m:300", "t:500", "canon 400", "martes 02/01"}, 4, 5, "canon 400", nil},
+		// {"canonRe->invalidDelete", "nameNote", []string{"canon 500", "invalid"}, 0, 2, "", nil},
+		// {"", "nameNote", []string{}, 0, 0, "", nil},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n, line, err := formatLine(tt.nameNote, tt.content, tt.lineN)
+			if n != tt.wantN {
+				t.Errorf("got '%d', want '%d'", n, tt.wantN)
+			}
+			if line != tt.wantLine {
+				t.Errorf("got '%s', want '%s'", line, tt.wantLine)
+			}
+
+			if err != tt.wantErr {
+				t.Errorf("got '%v', want '%v'", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestInvalidLine(t *testing.T) {
+	var tests = []struct {
+		name      string
+		nameNote  string
+		content   string
+		readInput func(string) (string, error)
+		reader    *bufio.Reader
+		wantLine  string
+		wantErr   error
+	}{
+		{
+			name:      "invalid->1",
+			nameNote:  "nameNote",
+			content:   "invalid",
+			readInput: func(s string) (string, error) { return s, nil },
+			reader:    bufio.NewReader(strings.NewReader("1\n")),
+			wantLine:  "",
+			wantErr:   nil,
+		},
+		{
+			name:     "invalid->2->valid",
+			nameNote: "nameNote",
+			content:  "m:-300+400",
+			readInput: func(s string) (string, error) {
+				return "m:400-300", nil
+			},
+			reader:   bufio.NewReader(strings.NewReader("2\n")),
+			wantLine: "m:400-300\n",
+			wantErr:  nil,
+		},
+		{
+			name:      "invalid->3",
+			nameNote:  "nameNote",
+			content:   "lunes 1",
+			readInput: func(s string) (string, error) { return s, nil },
+			reader:    bufio.NewReader(strings.NewReader("3\n")),
+			wantLine:  "",
+			wantErr:   errSkipNote,
+		},
+		{
+			name:      "invalidOption->erase",
+			nameNote:  "nameNote",
+			content:   "bad data",
+			readInput: func(s string) (string, error) { return s, nil },
+			reader:    bufio.NewReader(strings.NewReader("4\n1\n")),
+			wantLine:  "",
+			wantErr:   nil,
+		},
+		{
+			name:     "option2->readInputError->valid",
+			nameNote: "nameNote",
+			content:  "m:-300+400",
+			readInput: func() func(string) (string, error) {
+				calls := 0
+				return func(s string) (string, error) {
+					calls++
+					if calls == 1 {
+						return "", fmt.Errorf("input error")
+					}
+					return "m:400-300", nil
+				}
+			}(),
+			reader:   bufio.NewReader(strings.NewReader("2\n")),
+			wantLine: "m:400-300\n",
+			wantErr:  nil,
+		},
+		{
+			name:     "option2->invalidEdit->valid",
+			nameNote: "nameNote",
+			content:  "bad data",
+			readInput: func() func(string) (string, error) {
+				calls := 0
+				return func(s string) (string, error) {
+					calls++
+					if calls == 1 {
+						return "canon", nil
+					}
+					return "canon 5000", nil
+				}
+			}(),
+			reader:   bufio.NewReader(strings.NewReader("2\n")),
+			wantLine: "canon 5000\n",
+			wantErr:  nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			line, err := invalidLine(tt.nameNote, tt.content, tt.readInput, tt.reader)
+			if line != tt.wantLine {
+				t.Errorf("got '%s', want '%s'", line, tt.wantLine)
+			}
+			if err != tt.wantErr {
+				t.Errorf("got '%v', want '%v'", err, tt.wantErr)
 			}
 		})
 	}
