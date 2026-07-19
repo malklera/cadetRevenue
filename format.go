@@ -329,26 +329,6 @@ func validLine(line string) bool {
 	}
 }
 
-// fillNoProcedings fill with 0 if there are no procedings in the next line, or prompt
-// for input if `nextLineInvalid`
-func fillNoProcedings(nameNote string, content []string, newContent string, n int) (string, int) {
-	switch {
-	case n+1 > len(content):
-		fmt.Println()
-		fmt.Println("File:", nameNote)
-		fmt.Println("Current line:")
-		fmt.Println(content[n])
-		fmt.Println("End of file with no procedings for the day, will be filled with 0")
-		newContent += "m:0\n"
-		newContent += "t:0\n"
-		return newContent, 0
-	case morningRe.MatchString(content[n+1]):
-		return "", 0
-	default:
-		return "", nextLineInvalid(nameNote, content[n], content[n+1], bufio.NewReader(os.Stdin))
-	}
-}
-
 // validDate evaluate if the given day `Day dd/mm` has sensible max numbers, dd < 31
 // and mm < 13
 func validDate(date string) bool {
