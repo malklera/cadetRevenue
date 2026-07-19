@@ -289,3 +289,27 @@ func TestInvalidLine(t *testing.T) {
 		})
 	}
 }
+
+func TestNextLineInvalid(t *testing.T) {
+	tests := []struct {
+		name        string
+		nameNote    string
+		currentLine string
+		nextLine    string
+		reader      *bufio.Reader
+		wantN       int
+	}{
+		{"erase", "nameNote", "m:100", "invalid-1", bufio.NewReader(strings.NewReader("1\n")), 1},
+		{"leave", "nameNote", "m:100", "invalid-2", bufio.NewReader(strings.NewReader("2\n")), 0},
+		{"invalidOpt->2", "nameNote", "m:100", "invalid-3", bufio.NewReader(strings.NewReader("3\n2\n")), 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := nextLineInvalid(tt.nameNote, tt.currentLine, tt.nextLine, tt.reader)
+			if n != tt.wantN {
+				t.Errorf("got '%d', want '%d'", n, tt.wantN)
+			}
+		})
+	}
+}
