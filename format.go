@@ -66,7 +66,7 @@ func formatNote(nameNote string) error {
 
 	// check each line after the first, for non-valid ones allow user to erase or modify
 	for lineN < len(content) {
-		n, line, err := formatLine(nameNote, content, lineN)
+		n, line, err := formatLine(nameNote, content, lineN, bufio.NewReader(os.Stdin))
 		if err != nil {
 			return err
 		}
@@ -374,7 +374,7 @@ func validDate(date string) bool {
 // formatLine check that `lineN` and `lineN+1` of `content` are valid, return
 // the number of lines to advance, the valid line to save, the only error it may
 // return is `errSkipNote`
-func formatLine(nameNote string, content []string, lineN int) (int, string, error) {
+func formatLine(nameNote string, content []string, lineN int, reader *bufio.Reader) (int, string, error) {
 	line := ""
 	switch {
 	case content[lineN] == "":
@@ -387,15 +387,15 @@ func formatLine(nameNote string, content []string, lineN int) (int, string, erro
 			dayNoWorkRe.MatchString(content[lineN+1]):
 			return lineN + 1, content[lineN], nil
 		default:
-			lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1], bufio.NewReader(os.Stdin))
+			lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1], reader)
 			return lineN + 1, content[lineN], nil
 		}
 	case dayNoWorkRe.MatchString(content[lineN]):
 		switch {
-		case dayWorkRe.MatchString(content[lineN+1]),
+		case lineN+1 == len(content),
+			dayWorkRe.MatchString(content[lineN+1]),
 			dayNoWorkRe.MatchString(content[lineN+1]),
-			canonRe.MatchString(content[lineN+1]),
-			lineN+1 == len(content):
+			canonRe.MatchString(content[lineN+1]):
 			day := strings.Split(content[lineN], ":")
 			line += addPadding(day[0]) + "\n"
 			// remove whitespace
@@ -403,7 +403,7 @@ func formatLine(nameNote string, content []string, lineN int) (int, string, erro
 			line += "t:0\n"
 			return lineN + 1, line, nil
 		default:
-			lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1], bufio.NewReader(os.Stdin))
+			lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1], reader)
 			return lineN + 1, content[lineN], nil
 		}
 	case dayWorkRe.MatchString(content[lineN]):
@@ -415,21 +415,21 @@ func formatLine(nameNote string, content []string, lineN int) (int, string, erro
 		case morningRe.MatchString(content[lineN+1]):
 			break
 		default:
-			lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1], bufio.NewReader(os.Stdin))
+			lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1], reader)
 		}
 		return lineN + 1, line, nil
 	case morningRe.MatchString(content[lineN]):
 		line += content[lineN] + "\n"
 		switch {
+		case lineN+1 == len(content),
+			canonRe.MatchString(content[lineN+1]),
+			dayNoWorkRe.MatchString(content[lineN+1]),
+			dayWorkRe.MatchString(content[lineN+1]):
+			line += "t:0\n"
 		case afternoonRe.MatchString(content[lineN+1]):
 			break
-		case canonRe.MatchString(content[lineN+1]),
-			dayNoWorkRe.MatchString(content[lineN+1]),
-			dayWorkRe.MatchString(content[lineN+1]),
-			lineN+1 == len(content):
-			line += "t:0\n"
 		default:
-			lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1], bufio.NewReader(os.Stdin))
+			lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1], reader)
 		}
 		return lineN + 1, line, nil
 	case afternoonRe.MatchString(content[lineN]):
@@ -441,11 +441,11 @@ func formatLine(nameNote string, content []string, lineN int) (int, string, erro
 			dayWorkRe.MatchString(content[lineN+1]):
 			break
 		default:
-			lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1], bufio.NewReader(os.Stdin))
+			lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1], reader)
 		}
 		return lineN + 1, line, nil
 	default:
-		line, err := invalidLine(nameNote, content[lineN], linerInput, bufio.NewReader(os.Stdin))
+		line, err := invalidLine(nameNote, content[lineN], linerInput, reader)
 		return lineN + 1, line, err
 	}
 }

@@ -165,19 +165,82 @@ func TestFormatLine(t *testing.T) {
 		nameNote string
 		content  []string
 		lineN    int
+		reader   *bufio.Reader
 		wantN    int
 		wantLine string
 		wantErr  error
 	}{
-		{"emptyLine", "nameNote", []string{"", "canon 300"}, 0, 1, "", nil},
-		{"canonRe->dayWorkRe", "nameNote", []string{"canon 350", "lunes 01/01", "m:300", "t:500", "canon 400", "martes 02/01"}, 4, 5, "canon 400", nil},
-		// {"canonRe->invalidDelete", "nameNote", []string{"canon 500", "invalid"}, 0, 2, "", nil},
-		// {"", "nameNote", []string{}, 0, 0, "", nil},
+		// branch 1: empty line
+		{"emptyLine", "nameNote", []string{"", "canon 300"}, 0, bufio.NewReader(strings.NewReader("")), 1, "", nil},
+		// branch 2a: canonRe at end of content
+		{"canonRe+end", "nameNote", []string{"canon 500"}, 0, bufio.NewReader(strings.NewReader("")), 1, "", nil},
+		// branch 2b: canonRe + dayWorkRe
+		{"canonRe+dayWorkRe", "nameNote", []string{"canon 350", "lunes 01/01", "m:300", "t:500", "canon 400", "martes 02/01"}, 4, bufio.NewReader(strings.NewReader("")), 5, "canon 400", nil},
+		// branch 2b: canonRe + dayNoWorkRe
+		{"canonRe+dayNoWorkRe", "nameNote", []string{"canon 500", "lunes 01/01:-4000"}, 0, bufio.NewReader(strings.NewReader("")), 1, "canon 500", nil},
+		// branch 2c: canonRe + invalid + erase
+		{"canonRe+invalidErase", "nameNote", []string{"canon 500", "invalid"}, 0, bufio.NewReader(strings.NewReader("1\n")), 2, "invalid", nil},
+		// branch 2c: canonRe + invalid + leave
+		{"canonRe+invalidLeave", "nameNote", []string{"canon 500", "invalid"}, 0, bufio.NewReader(strings.NewReader("2\n")), 1, "canon 500", nil},
+		// branch 3a: dayNoWorkRe + dayWorkRe next
+		{"dayNoWorkRe+dayWorkRe", "nameNote", []string{"lunes 01/01:-4000", "martes 02/01"}, 0, bufio.NewReader(strings.NewReader("")), 1, "lunes 01/01\nm:-4000\nt:0\n", nil},
+		// branch 3a: dayNoWorkRe + end (panics: bounds check after content[lineN+1] access)
+		{"dayNoWorkRe+end", "nameNote", []string{"lunes 01/01:-4000"}, 0, bufio.NewReader(strings.NewReader("")), 1, "lunes 01/01\nm:-4000\nt:0\n", nil},
+		// branch 3a: dayNoWorkRe + canonRe next
+		{"dayNoWorkRe+canonRe", "nameNote", []string{"lunes 01/01:-4000", "canon 500"}, 0, bufio.NewReader(strings.NewReader("")), 1, "lunes 01/01\nm:-4000\nt:0\n", nil},
+		// branch 3a: dayNoWorkRe + dayNoWorkRe next, with padding
+		{"dayNoWorkRe+dayNoWorkRe", "nameNote", []string{"lunes 1/1:-4000", "martes 2/2:-5000"}, 0, bufio.NewReader(strings.NewReader("")), 1, "lunes 01/01\nm:-4000\nt:0\n", nil},
+		// branch 3b: dayNoWorkRe + invalid + erase
+		{"dayNoWorkRe+invalidErase", "nameNote", []string{"lunes 01/01:-4000", "invalid"}, 0, bufio.NewReader(strings.NewReader("1\n")), 2, "invalid", nil},
+		// branch 3b: dayNoWorkRe + invalid + leave
+		{"dayNoWorkRe+invalidLeave", "nameNote", []string{"lunes 01/01:-4000", "invalid"}, 0, bufio.NewReader(strings.NewReader("2\n")), 1, "lunes 01/01:-4000", nil},
+		// branch 4a: dayWorkRe + end
+		{"dayWorkRe+end", "nameNote", []string{"lunes 01/01"}, 0, bufio.NewReader(strings.NewReader("")), 1, "lunes 01/01\nm:0\nt:0\n", nil},
+		// branch 4a: dayWorkRe + end, with padding
+		{"dayWorkRe+end+padding", "nameNote", []string{"martes 3/1"}, 0, bufio.NewReader(strings.NewReader("")), 1, "martes 03/01\nm:0\nt:0\n", nil},
+		// branch 4b: dayWorkRe + morningRe
+		{"dayWorkRe+morning", "nameNote", []string{"lunes 01/01", "m:300"}, 0, bufio.NewReader(strings.NewReader("")), 1, "lunes 01/01\n", nil},
+		// branch 4c: dayWorkRe + invalid + erase
+		{"dayWorkRe+invalidErase", "nameNote", []string{"lunes 01/01", "invalid"}, 0, bufio.NewReader(strings.NewReader("1\n")), 2, "lunes 01/01\n", nil},
+		// branch 4c: dayWorkRe + invalid + leave
+		{"dayWorkRe+invalidLeave", "nameNote", []string{"lunes 01/01", "invalid"}, 0, bufio.NewReader(strings.NewReader("2\n")), 1, "lunes 01/01\n", nil},
+		// branch 5a: morningRe + afternoonRe
+		{"morning+afternoon", "nameNote", []string{"m:300", "t:500"}, 0, bufio.NewReader(strings.NewReader("")), 1, "m:300\n", nil},
+		// branch 5b: morningRe + canonRe
+		{"morning+canon", "nameNote", []string{"m:300", "canon 500"}, 0, bufio.NewReader(strings.NewReader("")), 1, "m:300\nt:0\n", nil},
+		// branch 5b: morningRe + dayNoWorkRe
+		{"morning+dayNoWorkRe", "nameNote", []string{"m:300", "lunes 01/01:-4000"}, 0, bufio.NewReader(strings.NewReader("")), 1, "m:300\nt:0\n", nil},
+		// branch 5b: morningRe + dayWorkRe
+		{"morning+dayWorkRe", "nameNote", []string{"m:300", "lunes 01/01"}, 0, bufio.NewReader(strings.NewReader("")), 1, "m:300\nt:0\n", nil},
+		// branch 5b: morningRe + end (panics: bounds check after content[lineN+1] access)
+		{"morning+end", "nameNote", []string{"m:300"}, 0, bufio.NewReader(strings.NewReader("")), 1, "m:300\nt:0\n", nil},
+		// branch 5c: morningRe + invalid + erase
+		{"morning+invalidErase", "nameNote", []string{"m:300", "invalid"}, 0, bufio.NewReader(strings.NewReader("1\n")), 2, "m:300\n", nil},
+		// branch 5c: morningRe + invalid + leave
+		{"morning+invalidLeave", "nameNote", []string{"m:300", "invalid"}, 0, bufio.NewReader(strings.NewReader("2\n")), 1, "m:300\n", nil},
+		// branch 6a: afternoonRe + end
+		{"afternoon+end", "nameNote", []string{"t:500"}, 0, bufio.NewReader(strings.NewReader("")), 1, "t:500\n", nil},
+		// branch 6a: afternoonRe + canonRe
+		{"afternoon+canon", "nameNote", []string{"t:500", "canon 500"}, 0, bufio.NewReader(strings.NewReader("")), 1, "t:500\n", nil},
+		// branch 6a: afternoonRe + dayWorkRe
+		{"afternoon+dayWorkRe", "nameNote", []string{"t:500", "lunes 01/01"}, 0, bufio.NewReader(strings.NewReader("")), 1, "t:500\n", nil},
+		// branch 6a: afternoonRe + dayNoWorkRe
+		{"afternoon+dayNoWorkRe", "nameNote", []string{"t:500", "lunes 01/01:-4000"}, 0, bufio.NewReader(strings.NewReader("")), 1, "t:500\n", nil},
+		// branch 6b: afternoonRe + invalid + erase
+		{"afternoon+invalidErase", "nameNote", []string{"t:500", "invalid"}, 0, bufio.NewReader(strings.NewReader("1\n")), 2, "t:500\n", nil},
+		// branch 6b: afternoonRe + invalid + leave
+		{"afternoon+invalidLeave", "nameNote", []string{"t:500", "invalid"}, 0, bufio.NewReader(strings.NewReader("2\n")), 1, "t:500\n", nil},
+		// branch 7: invalid line + erase
+		{"invalidLine+erase", "nameNote", []string{"invalid"}, 0, bufio.NewReader(strings.NewReader("1\n")), 1, "", nil},
+		// branch 7: invalid line + skip
+		{"invalidLine+skip", "nameNote", []string{"invalid"}, 0, bufio.NewReader(strings.NewReader("3\n")), 1, "", errSkipNote},
+		// branch 7: invalid line + invalid option then erase
+		{"invalidLine+invalidOpt+erase", "nameNote", []string{"invalid"}, 0, bufio.NewReader(strings.NewReader("4\n1\n")), 1, "", nil},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			n, line, err := formatLine(tt.nameNote, tt.content, tt.lineN)
+			n, line, err := formatLine(tt.nameNote, tt.content, tt.lineN, tt.reader)
 			if n != tt.wantN {
 				t.Errorf("got '%d', want '%d'", n, tt.wantN)
 			}
