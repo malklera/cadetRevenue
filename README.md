@@ -144,35 +144,72 @@ It is a CLI with the following flags available.
 
 [x] For now, this will be the state of it, it do what i want, need to study other things for now
 
-[ ] If a procedings gets cut by an accidental new line i will have to manually modify the file
-
-[ ] Ensure data for a specific day is unique, I copied the content of abril-4-2024.txt to abril-5-2024.txt to test
 
 # TODO v2
 
 [x] Change the shape of the cli, setup, show, format, process, will be subcommands.
 
+[x] Ensure data for a specific day is unique, I copied the content of abril-4-2024.txt to abril-5-2024.txt to test
+
 [x] Fix the help messages.
 
 [x] Think if the subcommands should be flagsets or not.
 
-[ ] Check how the db works, need to rework it, for now, leave it as is.
+[x] Check how the db works, need to rework it, for now, leave it as is.
 
 [x] Think which flags are global(target) and belong to a subcommand. show(year, month, day)
 
-[ ] Update all errors to a uniform format.
+[x] Update all errors to a uniform format.
 
 [x] Ensure data for each day is unique in the database.
 
 [x] Change switch to use ',' for all that have a equal action
+
+[x] Change the name of the originals files, to year-month-n.txt, try to see how
+they get sorted. Has to update `processNote()`.
+
+[x] fix `validFirstLine()`
+
+[x] Test `validFirstLine`
+
+[x] When `formatNote()` if there is a space anywhere, strip it.
+
+[x] All line check should check if there is an entry for the next line.
+
+[x] I think when i modify a line in the last line, like 'sabado ... m:' i do not
+add the needed 't:0' below.
+
+[x] `Lunes 29/9:` is this an error or consider it like `Lunes 29/9:0`?
+
+[x] When testing `formatNote()` ensure it output the first line canon
+
+
+
+[ ] Work on process.go
+
+[ ] list all files in formatedDir
+
+[ ] loop through it and extract its content
+
+[ ] from the file name take the year
+
+[ ] take canon, day-month, morning movements, afternoon movements, expenses
+
+[ ] calculate the net profit of the day
+
+[ ] save the day entry into the db
+
+[ ] Decide if when showing current line(`nextLineInvalid`) i will show the original
+line or the formated one, currently i show the original, so original: T:0, formated:
+t:0
+
+[ ] Refactor moving related functions to their own file.
 
 [ ] At some point use the `validDate()` to ensure i have possible dates,
 not actually correct ones yet.
 
 [ ] Rework the user input interaction, need a way of going back, always, try to
 make each interaction its own function, just pass the needed checks.
-
-[ ] `processProcedings("T:-2000-3000")` panics, why? fix it
 
 [ ] Calculate the revenue of a given month.
 
@@ -183,48 +220,6 @@ make each interaction its own function, just pass the needed checks.
 [ ] Change the storage of income
 
 [ ] Test `createEnv`
-
-
-
-[x] Change the name of the originals files, to year-month-n.txt, try to see how
-they get sorted. Has to update `processNote()`.
-
-[x] fix `validFirstLine()`
-
-[x] Test `validFirstLine`
-
-[ ] Refactor moving related functions to their own file.
-
-[ ] When `formatNote()` if there is a space anywhere, strip it.
-
-[ ] All line check should check if there is an entry for the next line.
-
-[ ] Update regex, 'T: ' has to be valid, just add a 0 automatically.
-
-[ ] Update regex, 't: - 4000' has to be valid, just add delete the spaces automatically.
-
-[ ] Update regex, 'm:2000+2200+2500+1600+2700-' has to be valid, just delete the unused symbol either + or -
-
-[ ] Update regex, 'm:2000+2500+2500+2000+2000+6800+2000+2000+2000++4000+6000' has to be valid, just delete the extra symbol if they are the same, ++ or --,
-it is an error if +- or -+
-
-[ ] Think about this, `m:-200+1600+2600+800+800+1000+1500` is a negative valid if
-it is not the last element?
-
-[ ] I think when i modify a line in the last line, like 'sabado ... m:' i do not
-add the needed 't:0' below.
-
-[ ] Decide if when showing current line(`nextLineInvalid`) i will show the original
-line or the formated one, currently i show the original, so original: T:0, formated:
-t:0
-
-[ ] `Lunes 29/9:` is this an error or consider it like `Lunes 29/9:0`?
-
-[ ] When testing `formatNote()` ensure it output the first line canon
-```
-M:2000+3000+
-4000
-```
 
 
 ## Test cases
@@ -243,274 +238,3 @@ cp backup/abril-1-2024.txt test-13-05/originals
 
 cp backup/ test-13-05/originals
 cp backup/ test-13-05/originals
-
-
-### For checkFileName()
-
-#### Should be valid
-
-- enero-1-2025.txt
-- febrero-2-2023.txt
-- octubre-5-2024.txt
-
-```sh
-touch enero-1-2025.txt febrero-2-2023.txt octubre-5-2024.txt
-```
-
-
-#### Should be invalid
-
-- wrong.txt
-- mayo-3-4-2020.txt
-- diciembre-2018.txt
-- noviembre.txt
-- 2021.txt
-
-```sh
-touch wrong.txt mayo-3-4-2020.txt diciembre-2018.txt noviembre.txt 2021.txt
-```
-
-
-### For checkFormatNote()
-
-#### Should be valid
-
-```
-
-Canon 7000
-Lunes 29/9:-4000
-Martes 30/9: 0
-Miércoles 1/10
-M:2000
-T:2000+2000
-Jueves 2/10
-M:-4500
-T:-4000
-Viernes 3/10 canon 7500
-M:2500+2200+2500+6000+2000+4000+4000+2000-14800
-T: 2000+5000+2000+2000+2000+3000+2500-3300
-Sábado 4/10
-M: 2000+2500+4500+4500+4000-2000
-
-```
-
-#### Should be invalid
-
-Error first line has to be Canon int
-```
-
-Lunes 29/9:-4000
-Martes 30/9: 0
-Miércoles 1/10
-M:2000
-T:2000+2000
-Jueves 2/10
-M:-4500
-T:-4000
-Viernes 3/10
-M:2500+2200+2500+6000+2000+4000+4000+2000-14800
-T:2000+5000+2000+2000+2000+3000+2500-3300
-Sábado 4/10
-M:2000+2500+4500+4500+4000-2000
-
-```
-
-Error on canon
-```
-
-Canon
-Lunes 29/9:-4000
-Martes 30/9: 0
-Miércoles 1/10
-M:2000
-T:2000+2000
-Jueves 2/10
-M:-4500
-T:-4000
-Viernes 3/10
-M:2500+2200+2500+6000+2000+4000+4000+2000-14800
-T:2000+5000+2000+2000+2000+3000+2500-3300
-Sábado 4/10
-M:2000+2500+4500+4500+4000-2000
-
-```
-
-Error on Lunes
-```
-
-Canon 7000
-Lunes 29/9:
-Martes 30/9: 0
-Miércoles 1/10
-M:2000
-T:2000+2000
-Jueves 2/10
-M:-4500
-T:-4000
-Viernes 3/10
-M:2500+2200+2500+6000+2000+4000+4000+2000-14800
-T:2000+5000+2000+2000+2000+3000+2500-3300
-Sábado 4/10
-M:2000+2500+4500+4500+4000-2000
-
-```
-
-Error on Domingo
-```
-
-Canon 7000
-Domingo 29/9:-4000
-Martes 30/9: 0
-Miércoles 1/10
-M:2000
-T:2000+2000
-Jueves 2/10
-M:-4500
-T:-4000
-Viernes 3/10
-M:2500+2200+2500+6000+2000+4000+4000+2000-14800
-T:2000+5000+2000+2000+2000+3000+2500-3300
-Sábado 4/10
-M:2000+2500+4500+4500+4000-2000
-
-```
-
-Error on Jueves
-```
-
-Canon 7000
-Lunes 29/9:-4000
-Martes 30/9: 0
-Miércoles 1/10
-M:2000
-T:2000+2000
-Jueves 40/10
-M:-4500
-T:-4000
-Viernes 3/10
-M:2500+2200+2500+6000+2000+4000+4000+2000-14800
-T:2000+5000+2000+2000+2000+3000+2500-3300
-Sábado 4/10
-M:2000+2500+4500+4500+4000-2000
-
-```
-
-Error on Viernes
-```
-
-Canon 7000
-Lunes 29/9:-4000
-Martes 30/9: 0
-Miércoles 1/10
-M:2000
-T:2000+2000
-Jueves 2/10
-M:-4500
-T:-4000
-Viernes 3/13
-M:2500+2200+2500+6000+2000+4000+4000+2000-14800
-T:2000+5000+2000+2000+2000+3000+2500-3300
-Sábado 4/10
-M:2000+2500+4500+4500+4000-2000
-
-```
-
-Error on M of Sabado
-```
-
-Canon 7000
-Lunes 29/9:-4000
-Martes 30/9: 0
-Miércoles 1/10
-M:2000
-T:2000+2000
-Jueves 2/10
-M:-4500
-T:-4000
-Viernes 3/10
-M:2500+2200+2500+6000+2000+4000+4000+2000-14800
-T:2000+5000+2000+2000+2000+3000+2500-3300
-Sábado 4/10
-M:2000++2500+4500+4500+4000-2000
-
-```
-
-Error below Lunes
-```
-
-Canon 7000
-Lunes 29/9:-4000
-M:2000
-Martes 30/9: 0
-Miércoles 1/10
-M:2000
-T:2000+2000
-Jueves 2/10
-M:-4500
-T:-4000
-Viernes 3/10
-M:2500+2200+2500+6000+2000+4000+4000+2000-14800
-T:2000+5000+2000+2000+2000+3000+2500-3300
-Sábado 4/10
-M:2000+2500+4500+4500+4000-2000
-
-```
-
-Error below Martes
-```
-
-Canon 7000
-Lunes 29/9:-4000
-M:2000
-Martes 30/9: 0
-comprar aceite
-Miércoles 1/10
-M:2000
-T:2000+2000
-Jueves 2/10
-M:-4500
-T:-4000
-Viernes 3/10
-M:2500+2200+2500+6000+2000+4000+4000+2000-14800
-T:2000+5000+2000+2000+2000+3000+2500-3300
-Sábado 4/10
-M:2000+2500+4500+4500+4000-2000
-
-```
-
-No really treated as an Error below Miercoles, but it just has to add procedings 0
-```
-
-Canon 7000
-Lunes 29/9:-4000
-Martes 30/9: 0
-Miércoles 1/10
-Jueves 2/10
-M:-4500
-T:-4000
-Viernes 3/10
-M:2500+2200+2500+6000+2000+4000+4000+2000-14800
-T:2000+5000+2000+2000+2000+3000+2500-3300
-Sábado 4/10
-M:2000+2500+4500+4500+4000-2000
-
-```
-
-Error on Miércoles
-
-```
-
-Canon 7000
-Lunes 29/9:-4000
-Martes 30/9: 0
-Miércoles 1/10 Canon 7500
-Jueves 2/10
-M:-4500
-T:-4000
-Viernes 3/10
-M:2500+2200+2500+6000+2000+4000+4000+2000-14800
-T:2000+5000+2000+2000+2000+3000+2500-3300
-Sábado 4/10
-M:2000+2500+4500+4500+4000-2000
-
-```
