@@ -76,121 +76,10 @@ func formatNote(nameNote string) error {
 
 	newContent, _ = strings.CutSuffix(newContent, "\n")
 
-	// Move the file
+	if err := moveFormated(nameNote, newContent); err != nil {
+		return err
+	}
 
-	// TODO: this has to be its own function
-
-	// Loop to os.CreateTemp()
-	// for {
-	// 	tempFile, err := os.CreateTemp(formatedDir, nameNote)
-	// 	tempName := tempFile.Name()
-	// 	formatedNote := filepath.Join(formatedDir, nameNote)
-	//
-	// 	if err != nil {
-	// 		fmt.Println()
-	// 		fmt.Println("File:", tempName)
-	// 		fmt.Fprintf(os.Stderr, "error creating temporary file: %v\n", err)
-	// 		fmt.Println("Do you want to retry? (y/n)")
-	// 		fmt.Print("> ")
-	// 		opt, err := reader.ReadString('\n')
-	// 		if err != nil {
-	// 			fmt.Fprintf(os.Stderr, "error reading input: %v\n", err)
-	// 		} else {
-	// 			opt = strings.TrimSpace(opt)
-	// 			switch opt {
-	// 			case "y", "Y":
-	// 				break
-	// 			case "n", "N":
-	// 				return errSkipNote
-	// 			default:
-	// 				fmt.Fprintf(os.Stderr, "'%s' is an invalid option.\n", opt)
-	// 			}
-	// 		}
-	// 	} else {
-	// 		defer os.Remove(tempName)
-	// 		for {
-	// 			if _, err := tempFile.Write([]byte(newContent)); err != nil {
-	// 				fmt.Println()
-	// 				fmt.Println("File:", tempName)
-	// 				fmt.Fprintf(os.Stderr, "error writing to the temporary file: %v\n", err)
-	// 				fmt.Println("Do you want to retry? (y/n)")
-	// 				fmt.Print("> ")
-	// 				opt, err := reader.ReadString('\n')
-	// 				if err != nil {
-	// 					fmt.Fprintf(os.Stderr, "error reading input: %v\n", err)
-	// 				} else {
-	// 					opt = strings.TrimSpace(opt)
-	// 					switch opt {
-	// 					case "y", "Y":
-	// 						break
-	// 					case "n", "N":
-	// 						return errSkipNote
-	// 					default:
-	// 						fmt.Fprintf(os.Stderr, "'%s' is an invalid option.\n", opt)
-	// 					}
-	// 				}
-	// 			} else {
-	// 				// data was writen
-	// 				if err := tempFile.Close(); err != nil {
-	// 					fmt.Fprintf(os.Stderr, "error closing temporary file after writing: %v", err)
-	// 				} else {
-	// 					for {
-	// 						if err := os.Rename(tempName, formatedNote); err != nil {
-	// 							fmt.Println()
-	// 							fmt.Println("File:", tempName)
-	// 							fmt.Fprintf(os.Stderr, "error renaming '%s' to '%s': %v\n", tempName, formatedNote, err)
-	// 							fmt.Println("Do you want to retry? (y/n)")
-	// 							fmt.Print("> ")
-	// 							opt, err := reader.ReadString('\n')
-	// 							if err != nil {
-	// 								fmt.Fprintf(os.Stderr, "error reading input: %v\n", err)
-	// 							} else {
-	// 								opt = strings.TrimSpace(opt)
-	// 								switch opt {
-	// 								case "y", "Y":
-	// 									break
-	// 								case "n", "N":
-	// 									return errSkipNote
-	// 								default:
-	// 									fmt.Fprintf(os.Stderr, "'%s' is an invalid option.\n", opt)
-	// 								}
-	// 							}
-	// 						} else {
-	// 							// os.Rename was successfull
-	// 							// has to Remove originals/nameNote
-	// 							for {
-	// 								if err := os.Remove(orgNote); err != nil {
-	// 									fmt.Println()
-	// 									fmt.Println("File:", orgNote)
-	// 									fmt.Fprintf(os.Stderr, "error removing '%s': %v\n", orgNote, err)
-	// 									fmt.Println("Do you want to retry? (y/n)")
-	// 									fmt.Print("> ")
-	// 									opt, err := reader.ReadString('\n')
-	// 									if err != nil {
-	// 										fmt.Fprintf(os.Stderr, "error reading input: %v\n", err)
-	// 									} else {
-	// 										opt = strings.TrimSpace(opt)
-	// 										switch opt {
-	// 										case "y", "Y":
-	// 											break
-	// 										case "n", "N":
-	// 											return errSkipNote
-	// 										default:
-	// 											fmt.Fprintf(os.Stderr, "'%s' is an invalid option.\n", opt)
-	// 										}
-	// 									}
-	// 								} else {
-	// 									// os.Remove successfull
-	// 									return nil
-	// 								}
-	// 							}
-	// 						}
-	// 					}
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
 	return nil
 }
 
@@ -476,4 +365,22 @@ func invalidLine(nameNote string,
 			fmt.Fprintf(os.Stderr, "'%s' is an invalid option.\n", opt)
 		}
 	}
+}
+
+func moveFormated(nameNote string, content string) error {
+	formatedNote, err := os.Create(filepath.Join(formatedDir, nameNote))
+	if err != nil {
+		return fmt.Errorf("os.Create(filepath.Join(%s, %s)): %w", formatedDir, nameNote, err)
+	}
+	defer formatedNote.Close()
+
+	if _, err := formatedNote.Write([]byte(content)); err != nil {
+		return fmt.Errorf("formatedNote.Write([]byte(%s))): %w", content, err)
+	}
+
+	orgNote := filepath.Join(originalsDir, nameNote)
+	if err := os.Remove(orgNote); err != nil {
+		return fmt.Errorf("os.Remove(%s): %w", orgNote, err)
+	}
+	return nil
 }
