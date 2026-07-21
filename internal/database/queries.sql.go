@@ -7,7 +7,10 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"time"
+
+	uuid "github.com/gofrs/uuid/v5"
 )
 
 const createEntry = `-- name: CreateEntry :one
@@ -22,7 +25,7 @@ RETURNING id, date, canon, profit
 type CreateEntryParams struct {
 	Date   time.Time
 	Canon  int64
-	Profit float64
+	Profit sql.NullFloat64
 }
 
 func (q *Queries) CreateEntry(ctx context.Context, arg CreateEntryParams) (Entry, error) {
@@ -46,7 +49,7 @@ entry_id, shift, amount
 `
 
 type CreateMovementParams struct {
-	EntryID int64
+	EntryID uuid.UUID
 	Shift   string
 	Amount  int64
 }

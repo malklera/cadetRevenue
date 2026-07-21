@@ -1,14 +1,14 @@
 -- +goose Up
 CREATE TABLE entry (
-    id INTEGER PRIMARY KEY,
+    id TEXT PRIMARY KEY,
     date TEXT UNIQUE NOT NULL,
     canon INTEGER NOT NULL,
-    profit REAL NOT NULL
+    profit REAL
 );
 
 CREATE TABLE movement (
-    id INTEGER PRIMARY KEY,
-    entry_id INTEGER NOT NULL,
+    id TEXT PRIMARY KEY,
+    entry_id TEXT NOT NULL,
     shift TEXT NOT NULL,
     amount INTEGER NOT NULL,
     FOREIGN KEY (entry_id) REFERENCES entry (id) ON DELETE CASCADE

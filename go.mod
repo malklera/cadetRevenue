@@ -3,9 +3,11 @@ module cadetRevenue
 go 1.26.0
 
 require (
+	github.com/gofrs/uuid/v5 v5.4.0
 	github.com/google/uuid v1.6.0
 	github.com/malklera/sliner v1.0.1
 	github.com/mattn/go-sqlite3 v1.14.47
+	modernc.org/sqlite v1.53.0
 )
 
 require (
@@ -97,7 +99,6 @@ require (
 	modernc.org/libc v1.73.4 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.53.0 // indirect
 )
 
 tool (

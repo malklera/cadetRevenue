@@ -11,3 +11,15 @@ sql:
             go_type:
               import: "time"
               type: "Time"
+          - column: "entry.id"
+            go_type:
+              import: "github.com/gofrs/uuid/v5"
+              type: "UUID"
+          - column: "movement.id"
+            go_type:
+              import: "github.com/gofrs/uuid/v5"
+              type: "UUID"
+          - column: "movement.entry_id"
+            go_type:
+              import: "github.com/gofrs/uuid/v5"
+              type: "UUID"
