@@ -7,16 +7,10 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 )
 
 var (
-	// fileNameRe defines the valid filename format: `YYYY-MES-D.txt` where MES is
-	// a Spanish month name (e.g., enero, febrero, ..., diciembre) and D is a
-	// single digit (0-9). Example: 2024-enero-3.txt
-	fileNameRe = regexp.MustCompile(`^(\d{4})-(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)-\d{1}\.txt$`)
-
 	fileStat   = os.Stat
 	fileRename = os.Rename
 )

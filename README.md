@@ -199,6 +199,8 @@ add the needed 't:0' below.
 
 [ ] save the day entry into the db
 
+[ ] Do i check the file name each time a list all files in a directory?
+
 [ ] Decide if when showing current line(`nextLineInvalid`) i will show the original
 line or the formated one, currently i show the original, so original: T:0, formated:
 t:0
