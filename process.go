@@ -8,7 +8,7 @@ import (
 	// "path/filepath"
 	"strconv"
 	"strings"
-	// "time"
+	"time"
 
 	"cadetRevenue/internal/database"
 	uuid "github.com/gofrs/uuid/v5"
@@ -63,71 +63,68 @@ import (
 // processNote accept the name of a file, extract the data from it, return a
 // slice of struct `Entry`, returns at any error, the notes are supposed
 // to be formated
-// func processNote(nameNote string, data []byte) ([]database.Entry, error) {
-// 	fmt.Println()
-// 	fmt.Println("Processing:", nameNote)
-//
-// 	content := strings.Split(string(data), "\n")
-//
-// 	year := fileNameRe.FindStringSubmatch(nameNote)[1]
-//
-// 	canon := int64(0)
-//
-// 	entries := make([]database.Entry, 0, 6)
-// 	movements := make([]database.Movement, 0, 12)
-// 	n := 0
-// 	for n < len(content) {
-// 		entryU7, err := uuid.NewV7()
-// 		if err != nil {
-// 			return nil, fmt.Errorf("uuid.NewV7(): %w", err)
-// 		}
-// 		entry := database.Entry{ID: entryU7, Canon: canon}
-// 		movU7, err := uuid.NewV7()
-// 		if err != nil {
-// 			return nil, fmt.Errorf("uuid.NewV7(): %w", err)
-// 		}
-// 		movement := database.Movement{ID: movU7, EntryID: entry.ID}
-// 		date := year + "-"
-// 		switch {
-// 		case canonRe.MatchString(content[n]):
-// 			line := strings.Split(content[n], " ")
-//
-// 			c, err := strconv.ParseInt(line[1], 10, 64)
-// 			if err != nil {
-// 				return nil, fmt.Errorf("canonRe.MatchString(%s): strconv.ParseInt(%s, 10, 64): %w", content[n], line[1], err)
-// 			}
-// 			canon = c
-// 			n++
-// 		case dayWorkRe.MatchString(content[n]):
-// 			_, cDate, _ := strings.Cut(content[n], " ")
-// 			day, month, _ := strings.Cut(cDate, "/")
-// 			date += month + "-" + day
-// 			pDate, err := time.Parse(time.DateOnly, date)
-// 			if err != nil {
-// 				return nil, fmt.Errorf("dayWorkRe.MatchString(%s): time.Parse(%s, %s): %w", content[n], time.DateOnly, date, err)
-// 			}
-// 			entry.Date = pDate
-// 			// Read day-date and advance counter
-// 			n++
-// 			morning, expensesM, err := processMovement(content[n])
-// 			if err != nil {
-// 				return nil, fmt.Errorf("dayWorkRe.MatchString(%s): processProcedings(%s): %w", content[n-1], content[n], err)
-// 			}
-// 			n++
-// 			expensesT := 0
-// 			entry.IncomeT, expensesT, err = processMovement(content[n])
-// 			if err != nil {
-// 				return nil, fmt.Errorf("dayWorkRe.MatchString(%s): processProcedings(%s): %w", content[n-2], content[n], err)
-// 			}
-// 			n++
-// 			entry.Expenses = expensesM + expensesT
-// 			entries = append(entries, entry)
-// 		default:
-// 			return nil, fmt.Errorf("line '%s' of file '%s' has the wrong format", content[n], nameNote)
-// 		}
-// 	}
-// 	return entries, nil
-// }
+func processNote(nameNote string, data []byte) ([]database.Entry, []database.Movement, error) {
+	fmt.Println()
+	fmt.Println("Processing:", nameNote)
+
+	content := strings.Split(string(data), "\n")
+
+	year := fileNameRe.FindStringSubmatch(nameNote)[1]
+
+	canon := int64(0)
+
+	entries := make([]database.Entry, 0, 6)
+	movements := make([]database.Movement, 0, 12)
+	n := 0
+	for n < len(content) {
+		entryU7, err := uuid.NewV7()
+		if err != nil {
+			return nil, nil, fmt.Errorf("uuid.NewV7(): %w", err)
+		}
+		entry := database.Entry{ID: entryU7, Canon: canon}
+
+		date := year + "-"
+
+		switch {
+		case canonRe.MatchString(content[n]):
+			line := strings.Split(content[n], " ")
+
+			c, err := strconv.ParseInt(line[1], 10, 64)
+			if err != nil {
+				return nil, nil,fmt.Errorf("canonRe.MatchString(%s): strconv.ParseInt(%s, 10, 64): %w", content[n], line[1], err)
+			}
+			canon = c
+			n++
+		case dayWorkRe.MatchString(content[n]):
+			_, cDate, _ := strings.Cut(content[n], " ")
+			day, month, _ := strings.Cut(cDate, "/")
+			date += month + "-" + day
+			pDate, err := time.Parse(time.DateOnly, date)
+			if err != nil {
+				return nil, nil, fmt.Errorf("dayWorkRe.MatchString(%s): time.Parse(%s, %s): %w", content[n], time.DateOnly, date, err)
+			}
+			entry.Date = pDate
+			// Read day-date and advance counter
+			n++
+			morning, err := processMovement(entry.ID, content[n])
+			if err != nil {
+				return nil, nil, fmt.Errorf("dayWorkRe.MatchString(%s): processProcedings(%s): %w", content[n-1], content[n], err)
+			}
+			n++
+			afternoon, err := processMovement(entry.ID, content[n])
+			if err != nil {
+				return nil, nil, fmt.Errorf("dayWorkRe.MatchString(%s): processProcedings(%s): %w", content[n-2], content[n], err)
+			}
+			n++
+			entries = append(entries, entry)
+			movements = append(movements, morning...)
+			movements = append(movements, afternoon...)
+		default:
+			return nil, nil, fmt.Errorf("line '%s' of file '%s' has the wrong format", content[n], nameNote)
+		}
+	}
+	return entries, movements, nil
+}
 
 // processMovement take in a valid string of `morningRe` or `afternoonRe`,
 // and extract its values
@@ -136,11 +133,6 @@ func processMovement(entryID uuid.UUID, content string) ([]database.Movement, er
 	line := strings.Split(content, ":")
 	shift := line[0]
 
-	// m:0
-	// t:2000
-	// t:2000+3000+2500
-	// m:-4500
-	// t:2000+3000+2500-3300
 	switch {
 	case strings.Contains(line[1], "-"):
 		hasExp := strings.Split(line[1], "-")
