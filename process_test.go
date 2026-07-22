@@ -3,6 +3,7 @@ package main
 import (
 	"testing"
 
+	"cadetRevenue/internal/database"
 	uuid "github.com/gofrs/uuid/v5"
 )
 
@@ -98,6 +99,33 @@ func TestProcessMovement(t *testing.T) {
 				if mov.ID == uuid.Nil {
 					t.Errorf("movement[%d].ID is nil UUID", i)
 				}
+			}
+		})
+	}
+}
+
+func TestCalcProfit(t *testing.T) {
+	var tests = []struct {
+		name       string
+		canon      int64
+		morning    []database.Movement
+		afternoon  []database.Movement
+		wantResult float64
+	}{
+		{
+			name:       "canon 8500, no work",
+			canon:      8500,
+			morning:    []database.Movement{{Amount: 0}},
+			afternoon:  []database.Movement{{Amount: 0}},
+			wantResult: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := calcProfit(tt.canon, tt.morning, tt.afternoon)
+			if got != tt.wantResult {
+				t.Errorf("got: %f, want: %f", got, tt.wantResult)
 			}
 		})
 	}

@@ -34,23 +34,16 @@ import (
 // 		orgNote := filepath.Join(formatedDir, note)
 // 		data, err := os.ReadFile(orgNote)
 // 		if err != nil {
-// 			return fmt.Errorf("os.ReadFile(%s): %w", orgNote, err)
+// 			fmt.Fprintf(os.Stderr, "os.ReadFile(%s): %w", orgNote, err)
+// 			continue
 // 		}
 //
-// 		entries, err := processNote(note, data)
+// 		entries, movements, err := processNote(note, data)
 // 		if err != nil {
 // 			fmt.Fprintf(os.Stderr, "error processing note '%s': %v\n", listNotes[n], err)
 // 			continue
 // 		}
-// 		// TODO: check this function again, do i want to open the database for each note or for all?
-// 		moveNote := true
-// 		for _, e := range entries {
-// 			if err := db.AddEntry(dbInstance, e); err != nil {
-// 				fmt.Fprintf(os.Stderr, "error adding entry '%v' to the database: %v\n", e.Date, err)
-// 				moveNote = false
-// 				break
-// 			}
-// 		}
+//
 // 		if moveNote {
 // 			if err := os.Rename(filepath.Join(formatedDir, listNotes[n]), filepath.Join(processedDir, listNotes[n])); err != nil {
 // 				fmt.Fprintf(os.Stderr, "error moving formated note to the processed directory: %v\n", err)
@@ -60,9 +53,9 @@ import (
 // 	return nil
 // }
 
-// processNote accept the name of a file, extract the data from it, return a
-// slice of struct `Entry`, returns at any error, the notes are supposed
-// to be formated
+// processNote accept the name of a file and its content, extract the data from it,
+// return the entries and their respective movements, returns at any error,
+// the notes are supposed to be formated
 func processNote(nameNote string, data []byte) ([]database.Entry, []database.Movement, error) {
 	fmt.Println()
 	fmt.Println("Processing:", nameNote)
@@ -91,7 +84,7 @@ func processNote(nameNote string, data []byte) ([]database.Entry, []database.Mov
 
 			c, err := strconv.ParseInt(line[1], 10, 64)
 			if err != nil {
-				return nil, nil,fmt.Errorf("canonRe.MatchString(%s): strconv.ParseInt(%s, 10, 64): %w", content[n], line[1], err)
+				return nil, nil, fmt.Errorf("canonRe.MatchString(%s): strconv.ParseInt(%s, 10, 64): %w", content[n], line[1], err)
 			}
 			canon = c
 			n++
@@ -116,6 +109,7 @@ func processNote(nameNote string, data []byte) ([]database.Entry, []database.Mov
 				return nil, nil, fmt.Errorf("dayWorkRe.MatchString(%s): processProcedings(%s): %w", content[n-2], content[n], err)
 			}
 			n++
+			// TODO: calculate profit
 			entries = append(entries, entry)
 			movements = append(movements, morning...)
 			movements = append(movements, afternoon...)
@@ -197,3 +191,50 @@ func processMovement(entryID uuid.UUID, content string) ([]database.Movement, er
 	}
 	return items, nil
 }
+
+func calcProfit(canon int64, morning []database.Movement, afternoon []database.Movement) float64 {
+	expenses := int64(0)
+	income := int64(0)
+	for _, i := range morning {
+		if i.Amount > int64(0) {
+			income += i.Amount
+		} else {
+			expenses += i.Amount
+		}
+	}
+
+	for _, i := range afternoon {
+		if i.Amount > int64(0) {
+			income += i.Amount
+		} else {
+			expenses += i.Amount
+		}
+	}
+
+	if income > 0 {
+		if income < canon*4 {
+			sub := float64(income - (income / 4))
+			return float64(income) - sub - float64(expenses)
+		} else {
+			return float64(canon) - float64(expenses)
+		}
+	}
+	return float64(expenses)
+}
+
+// func saveNote(ctx context.Context, db *sql.DB, queries *database.Queries, entries []database.Entry, movements []database.Movement) error {
+// 	tx, err := db.Begin()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer tx.Rollback()
+// 	qtx := queries.WithTx(tx)
+// 	for _, e := range entries {
+// 		err := qtx.CreateEntry(ctx, database.CreateEntryParams{
+// 			ID:     e.ID,
+// 			Date:   e.Date,
+// 			Canon:  e.Canon,
+// 			Profit: e.Profit,
+// 		})
+// 	}
+// }
