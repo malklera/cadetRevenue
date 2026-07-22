@@ -13,49 +13,53 @@ import (
 	uuid "github.com/gofrs/uuid/v5"
 )
 
-const createEntry = `-- name: CreateEntry :one
+const createEntry = `-- name: CreateEntry :exec
 INSERT INTO entry (
-date, canon, profit
+id, date, canon, profit
 ) VALUES (
-?, ?, ?
+?, ?, ?, ?
 )
-RETURNING id, date, canon, profit
 `
 
 type CreateEntryParams struct {
+	ID     uuid.UUID
 	Date   time.Time
 	Canon  int64
 	Profit sql.NullFloat64
 }
 
-func (q *Queries) CreateEntry(ctx context.Context, arg CreateEntryParams) (Entry, error) {
-	row := q.db.QueryRowContext(ctx, createEntry, arg.Date, arg.Canon, arg.Profit)
-	var i Entry
-	err := row.Scan(
-		&i.ID,
-		&i.Date,
-		&i.Canon,
-		&i.Profit,
+func (q *Queries) CreateEntry(ctx context.Context, arg CreateEntryParams) error {
+	_, err := q.db.ExecContext(ctx, createEntry,
+		arg.ID,
+		arg.Date,
+		arg.Canon,
+		arg.Profit,
 	)
-	return i, err
+	return err
 }
 
 const createMovement = `-- name: CreateMovement :exec
 INSERT INTO movement (
-entry_id, shift, amount
+id, entry_id, shift, amount
 ) VALUES (
-?, ?, ?
+?, ?, ?, ?
 )
 `
 
 type CreateMovementParams struct {
+	ID      uuid.UUID
 	EntryID uuid.UUID
 	Shift   string
 	Amount  int64
 }
 
 func (q *Queries) CreateMovement(ctx context.Context, arg CreateMovementParams) error {
-	_, err := q.db.ExecContext(ctx, createMovement, arg.EntryID, arg.Shift, arg.Amount)
+	_, err := q.db.ExecContext(ctx, createMovement,
+		arg.ID,
+		arg.EntryID,
+		arg.Shift,
+		arg.Amount,
+	)
 	return err
 }
 
