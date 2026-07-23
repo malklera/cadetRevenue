@@ -13,11 +13,11 @@ import (
 )
 
 var (
-	canonRe        = regexp.MustCompile(`^canon \d+$`)
-	dayNoWorkRe    = regexp.MustCompile(`^(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado) \d{1,2}\/\d{1,2}: *(0|-\d+)$`)
-	dayWorkRe      = regexp.MustCompile(`^(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado) \d{1,2}\/\d{1,2}$`)
-	morningRe      = regexp.MustCompile(`^m: *(?:-\d+|\d+(?:\+\d+)*(?:-\d+)?)$`)
-	afternoonRe    = regexp.MustCompile(`^t: *(?:-\d+|\d+(?:\+\d+)*(?:-\d+)?)$`)
+	canonRe     = regexp.MustCompile(`^canon \d+$`)
+	dayNoWorkRe = regexp.MustCompile(`^(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado) \d{1,2}\/\d{1,2}: *(0|-\d+)$`)
+	dayWorkRe   = regexp.MustCompile(`^(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado) \d{1,2}\/\d{1,2}$`)
+	morningRe   = regexp.MustCompile(`^m: *(?:-\d+|\d+(?:\+\d+)*(?:-\d+)?)$`)
+	afternoonRe = regexp.MustCompile(`^t: *(?:-\d+|\d+(?:\+\d+)*(?:-\d+)?)$`)
 	// fileNameRe defines the valid filename format: `YYYY-MES-D.txt` where MES is
 	// a Spanish month name (e.g., enero, febrero, ..., diciembre) and D is a
 	// single digit (0-9). Example: 2024-enero-3.txt
@@ -92,32 +92,28 @@ func main() {
 	case "setup":
 		// NOTE: Do i error when passing not valid flags or just ignore?
 		setupCmd.Parse(os.Args[2:])
-		err := createEnv(target)
-		if err != nil {
+		if err := createEnv(target); err != nil {
 			fmt.Fprintf(os.Stderr, "error creating the needed directories at '%s': %v\n", target, err)
 			os.Exit(1)
 		}
 		fmt.Printf("Enviroment successfully created at '%s'\n", target)
 	case "format":
 		formatCmd.Parse(os.Args[2:])
-		err := formatNotes(target)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "error formating notes at '%s': %v", target, err)
+		if err := formatNotes(target); err != nil {
+			fmt.Fprintf(os.Stderr, "error formating notes at '%s': %v\n", target, err)
 			os.Exit(1)
 		}
 	case "process":
 		processCmd.Parse(os.Args[2:])
-		// err := processNotes(target)
-		// if err != nil {
-		// 	fmt.Fprintf(os.Stderr, "Error formating notes at `%s`: %v", target, err)
-		// 	os.Exit(1)
-		// }
+		if err := processNotes(target); err != nil {
+			fmt.Fprintf(os.Stderr, "Error formating notes at `%s`: %v\n", target, err)
+			os.Exit(1)
+		}
 	case "show":
 		fmt.Println("show")
 		showCmd.Parse(os.Args[2:])
-		// err := showEntries(target, year, month, day)
-		// if err != nil {
-		// 	fmt.Fprintf(os.Stderr, "showEntries(%s, %d, %d, %d)", target, year, month, day)
+		// if err := showEntries(target, year, month, day); err != nil {
+		// 	fmt.Fprintf(os.Stderr, "showEntries(%s, %d, %d, %d): %v\n", target, year, month, day, err)
 		// 	os.Exit(1)
 		// }
 	default:

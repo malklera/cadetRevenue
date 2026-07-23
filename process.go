@@ -1,11 +1,11 @@
 package main
 
 import (
-	// "context"
-	// "database/sql"
+	"context"
+	"database/sql"
 	"fmt"
-	// "os"
-	// "path/filepath"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -16,42 +16,47 @@ import (
 
 // processNotes process all notes in `formatedDir`, move the notes correctly
 // formated to `processedDir`.
-// func processNotes(target string) error {
-// 	path := filepath.Join(target, formatedDir)
-// 	listNotes, err := listFiles(path)
-// 	if err != nil {
-// 		return fmt.Errorf("listFiles(%s): %w", path, err)
-// 	}
-//
-// 	ctx := context.Background()
-// 	db, err := sql.Open("sqlite3", "entries.db")
-// 	if err != nil {
-// 		return fmt.Errorf("sql.Open(\"sqlite3\", \"entries.db\"): %w", err)
-// 	}
-// 	defer db.Close()
-//
-// 	for n, note := range listNotes {
-// 		orgNote := filepath.Join(formatedDir, note)
-// 		data, err := os.ReadFile(orgNote)
-// 		if err != nil {
-// 			fmt.Fprintf(os.Stderr, "os.ReadFile(%s): %w", orgNote, err)
-// 			continue
-// 		}
-//
-// 		entries, movements, err := processNote(note, data)
-// 		if err != nil {
-// 			fmt.Fprintf(os.Stderr, "error processing note '%s': %v\n", listNotes[n], err)
-// 			continue
-// 		}
-//
-// 		if moveNote {
-// 			if err := os.Rename(filepath.Join(formatedDir, listNotes[n]), filepath.Join(processedDir, listNotes[n])); err != nil {
-// 				fmt.Fprintf(os.Stderr, "error moving formated note to the processed directory: %v\n", err)
-// 			}
-// 		}
-// 	}
-// 	return nil
-// }
+func processNotes(target string) error {
+	path := filepath.Join(target, formatedDir)
+	listNotes, err := listFiles(path)
+	if err != nil {
+		return fmt.Errorf("listFiles(%s): %w", path, err)
+	}
+
+	ctx := context.Background()
+	db, err := sql.Open("sqlite3", "entries.db")
+	if err != nil {
+		return fmt.Errorf("sql.Open(\"sqlite3\", \"entries.db\"): %w", err)
+	}
+	defer db.Close()
+
+	queries := database.New(db)
+
+	for _, note := range listNotes {
+		orgNote := filepath.Join(formatedDir, note)
+		data, err := os.ReadFile(orgNote)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error in os.ReadFile(%s): %v", orgNote, err)
+			continue
+		}
+
+		entries, movements, err := processNote(note, data)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error processing note '%s': %v\n", note, err)
+			continue
+		}
+
+		if err := saveNote(ctx, db, queries, entries, movements); err != nil {
+			fmt.Fprintf(os.Stderr, "error saving note '%s': %v\n", note, err)
+			continue
+		}
+
+		if err := os.Rename(orgNote, filepath.Join(processedDir, note)); err != nil {
+			fmt.Fprintf(os.Stderr, "error moving formated note to the processed directory: %v\n", err)
+		}
+	}
+	return nil
+}
 
 // processNote accept the name of a file and its content, extract the data from it,
 // return the entries and their respective movements, returns at any error,
@@ -109,7 +114,7 @@ func processNote(nameNote string, data []byte) ([]database.Entry, []database.Mov
 				return nil, nil, fmt.Errorf("dayWorkRe.MatchString(%s): processProcedings(%s): %w", content[n-2], content[n], err)
 			}
 			n++
-			// TODO: calculate profit
+			entry.Profit = calcProfit(entry.Canon, morning, afternoon)
 			entries = append(entries, entry)
 			movements = append(movements, morning...)
 			movements = append(movements, afternoon...)
@@ -221,19 +226,23 @@ func calcProfit(canon int64, morning []database.Movement, afternoon []database.M
 	return expenses
 }
 
-// func saveNote(ctx context.Context, db *sql.DB, queries *database.Queries, entries []database.Entry, movements []database.Movement) error {
-// 	tx, err := db.Begin()
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer tx.Rollback()
-// 	qtx := queries.WithTx(tx)
-// 	for _, e := range entries {
-// 		err := qtx.CreateEntry(ctx, database.CreateEntryParams{
-// 			ID:     e.ID,
-// 			Date:   e.Date,
-// 			Canon:  e.Canon,
-// 			Profit: e.Profit,
-// 		})
-// 	}
-// }
+func saveNote(ctx context.Context, db *sql.DB, queries *database.Queries, entries []database.Entry, movements []database.Movement) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	qtx := queries.WithTx(tx)
+	for _, e := range entries {
+		if err := qtx.CreateEntry(ctx, database.CreateEntryParams(e)); err != nil {
+			return err
+		}
+	}
+
+	for _, m := range movements {
+		if err := qtx.CreateMovement(ctx, database.CreateMovementParams(m)); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
+}
