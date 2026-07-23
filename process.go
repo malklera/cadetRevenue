@@ -193,33 +193,32 @@ func processMovement(entryID uuid.UUID, content string) ([]database.Movement, er
 }
 
 func calcProfit(canon int64, morning []database.Movement, afternoon []database.Movement) float64 {
-	expenses := int64(0)
-	income := int64(0)
+	expenses := float64(0)
+	income := float64(0)
 	for _, i := range morning {
-		if i.Amount > int64(0) {
-			income += i.Amount
+		if i.Amount >= int64(0) {
+			income += float64(i.Amount)
 		} else {
-			expenses += i.Amount
+			expenses += float64(i.Amount)
 		}
 	}
 
 	for _, i := range afternoon {
-		if i.Amount > int64(0) {
-			income += i.Amount
+		if i.Amount >= int64(0) {
+			income += float64(i.Amount)
 		} else {
-			expenses += i.Amount
+			expenses += float64(i.Amount)
 		}
 	}
 
 	if income > 0 {
-		if income < canon*4 {
-			sub := float64(income - (income / 4))
-			return float64(income) - sub - float64(expenses)
+		if income < float64(canon*4) {
+			return income - income/4 + expenses
 		} else {
-			return float64(canon) - float64(expenses)
+			return income - float64(canon) + expenses
 		}
 	}
-	return float64(expenses)
+	return expenses
 }
 
 // func saveNote(ctx context.Context, db *sql.DB, queries *database.Queries, entries []database.Entry, movements []database.Movement) error {
