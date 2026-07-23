@@ -99,17 +99,11 @@ func TestValidLine(t *testing.T) {
 		want bool
 	}{
 		{"canon 7000", true},
+		{"canon", false},
 		{"lunes 29/9:-4000", true},
 		{"martes 30/9: 0", true},
 		{"miércoles 1/10", true},
-		{"m:2000", true},
-		{"t:2000+2000", true},
-		{"t:-2000+2000", false},
-		{"m:-4500", true},
 		{"viernes 3/10 canon 7500", false},
-		{"m:2500+2200+2500+6000+2000+4000+4000+2000-14800", true},
-		{"t: 2000+5000+2000+2000+2000+3000+2500-3300", true},
-		{"canon", false},
 		{"lunes 29/9:", false},
 		{"domingo 29/9:-4000", false},
 		{"jueves 40/10", false},
@@ -118,7 +112,14 @@ func TestValidLine(t *testing.T) {
 		{"viernes -3/13", false},
 		{"viernes 3/-13", false},
 		{"viernes 3/0", false},
+		{"m:2500+2200+2500+6000+2000+4000+4000+2000-14800", true},
+		{"t: 2000+5000+2000+2000+2000+3000+2500-3300", true},
 		{"m:2000++2500+4500+4500+4000-2000", false},
+		{"m:-200+1600+2600+800+800+1000+1500", false},
+		{"m:2000", true},
+		{"t:2000+2000", true},
+		{"t:-2000+2000", false},
+		{"m:-4500", true},
 	}
 
 	for _, tt := range lines {

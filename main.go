@@ -16,8 +16,9 @@ var (
 	canonRe     = regexp.MustCompile(`^canon \d+$`)
 	dayNoWorkRe = regexp.MustCompile(`^(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado) \d{1,2}\/\d{1,2}: *(0|-\d+)$`)
 	dayWorkRe   = regexp.MustCompile(`^(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado) \d{1,2}\/\d{1,2}$`)
-	morningRe   = regexp.MustCompile(`^m: *(?:-\d+|\d+(?:\+\d+)*(?:-\d+)?)$`)
-	afternoonRe = regexp.MustCompile(`^t: *(?:-\d+|\d+(?:\+\d+)*(?:-\d+)?)$`)
+	morningRe   = regexp.MustCompile(`^m:\s*(?:-?\d+|\d+(?:\+\d+)*(?:-\d+)?)$`)
+	afternoonRe = regexp.MustCompile(`^t:\s*(?:-?\d+|\d+(?:\+\d+)*(?:-\d+)?)$`)
+
 	// fileNameRe defines the valid filename format: `YYYY-MES-D.txt` where MES is
 	// a Spanish month name (e.g., enero, febrero, ..., diciembre) and D is a
 	// single digit (0-9). Example: 2024-enero-3.txt
