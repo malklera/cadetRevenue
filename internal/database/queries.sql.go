@@ -7,7 +7,6 @@ package database
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	uuid "github.com/gofrs/uuid/v5"
@@ -25,7 +24,7 @@ type CreateEntryParams struct {
 	ID     uuid.UUID
 	Date   time.Time
 	Canon  int64
-	Profit sql.NullFloat64
+	Profit float64
 }
 
 func (q *Queries) CreateEntry(ctx context.Context, arg CreateEntryParams) error {

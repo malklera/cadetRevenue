@@ -5,7 +5,6 @@
 package database
 
 import (
-	"database/sql"
 	"time"
 
 	uuid "github.com/gofrs/uuid/v5"
@@ -15,7 +14,7 @@ type Entry struct {
 	ID     uuid.UUID
 	Date   time.Time
 	Canon  int64
-	Profit sql.NullFloat64
+	Profit float64
 }
 
 type Movement struct {

@@ -3,7 +3,7 @@ CREATE TABLE entry (
     id TEXT PRIMARY KEY,
     date TEXT UNIQUE NOT NULL,
     canon INTEGER NOT NULL,
-    profit REAL
+    profit REAL NOT NULL
 );
 
 CREATE TABLE movement (
