@@ -26,12 +26,12 @@ func formatNotes(target string) error {
 			case nil:
 				break
 			case errSkipNote:
-				fmt.Printf("Formating of '%s' skipped\n", note)
+				fmt.Printf("Formating of '%s' skipped.\n", note)
 			default:
 				fmt.Fprintf(os.Stderr, "error checking the format of '%s': %v\n", note, err)
 			}
 		case errRenameCancel:
-			fmt.Printf("The renaming of '%s' was canceled\n", note)
+			fmt.Printf("The renaming of '%s' was canceled.\n", note)
 		default:
 			fmt.Fprintf(os.Stderr, "error checking the name of '%s': %v\n", note, err)
 		}
@@ -80,6 +80,7 @@ func formatNote(nameNote string) error {
 		return err
 	}
 
+	fmt.Println("Formated:", nameNote)
 	return nil
 }
 
@@ -247,17 +248,17 @@ func formatLine(nameNote string, content []string, lineN int, reader *bufio.Read
 	line := ""
 	switch {
 	case content[lineN] == "":
-		return lineN + 1, "", nil
+		return 1, "", nil
 	case canonRe.MatchString(content[lineN]):
 		switch {
 		case lineN+1 == len(content):
-			return lineN + 1, "", nil
+			return 1, "", nil
 		case dayWorkRe.MatchString(content[lineN+1]),
 			dayNoWorkRe.MatchString(content[lineN+1]):
-			return lineN + 1, content[lineN], nil
+			return 1, content[lineN], nil
 		default:
-			lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1], reader)
-			return lineN + 1, content[lineN], nil
+			n := nextLineInvalid(nameNote, content[lineN], content[lineN+1], reader)
+			return n + 1, content[lineN], nil
 		}
 	case dayNoWorkRe.MatchString(content[lineN]):
 		switch {
@@ -270,10 +271,10 @@ func formatLine(nameNote string, content []string, lineN int, reader *bufio.Read
 			// remove whitespace
 			line += "m:" + strings.ReplaceAll(day[1], " ", "") + "\n"
 			line += "t:0\n"
-			return lineN + 1, line, nil
+			return 3, line, nil
 		default:
-			lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1], reader)
-			return lineN + 1, content[lineN], nil
+			n := nextLineInvalid(nameNote, content[lineN], content[lineN+1], reader)
+			return n + 1, content[lineN], nil
 		}
 	case dayWorkRe.MatchString(content[lineN]):
 		line += addPadding(content[lineN]) + "\n"
@@ -281,12 +282,13 @@ func formatLine(nameNote string, content []string, lineN int, reader *bufio.Read
 		case lineN+1 == len(content):
 			line += "m:0\n"
 			line += "t:0\n"
+			return 1, line, nil
 		case morningRe.MatchString(content[lineN+1]):
-			break
+			return 1, line, nil
 		default:
-			lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1], reader)
+			n := nextLineInvalid(nameNote, content[lineN], content[lineN+1], reader)
+			return n + 1, line, nil
 		}
-		return lineN + 1, line, nil
 	case morningRe.MatchString(content[lineN]):
 		line += content[lineN] + "\n"
 		switch {
@@ -295,12 +297,13 @@ func formatLine(nameNote string, content []string, lineN int, reader *bufio.Read
 			dayNoWorkRe.MatchString(content[lineN+1]),
 			dayWorkRe.MatchString(content[lineN+1]):
 			line += "t:0\n"
+			return 2, line, nil
 		case afternoonRe.MatchString(content[lineN+1]):
-			break
+			return 1, line, nil
 		default:
-			lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1], reader)
+			n := nextLineInvalid(nameNote, content[lineN], content[lineN+1], reader)
+			return n + 1, line, nil
 		}
-		return lineN + 1, line, nil
 	case afternoonRe.MatchString(content[lineN]):
 		line += content[lineN] + "\n"
 		switch {
@@ -308,14 +311,15 @@ func formatLine(nameNote string, content []string, lineN int, reader *bufio.Read
 			canonRe.MatchString(content[lineN+1]),
 			dayNoWorkRe.MatchString(content[lineN+1]),
 			dayWorkRe.MatchString(content[lineN+1]):
-			break
+			return 1, line, nil
 		default:
-			lineN = lineN + nextLineInvalid(nameNote, content[lineN], content[lineN+1], reader)
+			n := nextLineInvalid(nameNote, content[lineN], content[lineN+1], reader)
+			return n + 1, line, nil
 		}
-		return lineN + 1, line, nil
 	default:
+		fmt.Println("before invalidLine")
 		line, err := invalidLine(nameNote, content[lineN], linerInput, reader)
-		return lineN + 1, line, err
+		return 1, line, err
 	}
 }
 

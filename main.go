@@ -100,10 +100,16 @@ func main() {
 		fmt.Printf("Enviroment successfully created at '%s'\n", target)
 	case "format":
 		formatCmd.Parse(os.Args[2:])
-		if err := formatNotes(target); err != nil {
+		err := formatNotes(target)
+		switch err {
+		case errNoFiles:
+			fmt.Fprintf(os.Stderr, "There are no files to format.\n")
+		case nil:
+			return
+		default:
 			fmt.Fprintf(os.Stderr, "error formating notes at '%s': %v\n", target, err)
-			os.Exit(1)
 		}
+		os.Exit(1)
 	case "process":
 		processCmd.Parse(os.Args[2:])
 		if err := processNotes(target); err != nil {

@@ -240,3 +240,15 @@ cp backup/abril-1-2024.txt test-13-05/originals
 
 cp backup/ test-13-05/originals
 cp backup/ test-13-05/originals
+
+## Valid movement
+
+m:0
+t:0
+m: 10
+m:10
+t:-10
+m:10+19
+t:10-18
+Only one negative number.
+Any number of sums
