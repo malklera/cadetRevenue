@@ -197,9 +197,9 @@ add the needed 't:0' below.
 
 
 
-[ ] fix the logic with dayNoWorkRe, check the ones in testFormat to see the error
+[x] fix the logic with dayNoWorkRe, check the ones in testFormat to see the error
 
-[ ] fix logic of canonRe, same as above.
+[x] fix logic of canonRe, same as above.
 
 [ ] `error saving note '2024-abril-5.txt': UNIQUE constraint failed: entry.date`
 update this error to show which date is the repeated one
@@ -221,6 +221,8 @@ t:0
 [ ] At some point use the `validDate()` to ensure i have possible dates,
 not actually correct ones yet.
 
+[ ] Should I save the day?
+
 [ ] Rework the user input interaction, need a way of going back, always, try to
 make each interaction its own function, just pass the needed checks.
 
@@ -229,6 +231,7 @@ make each interaction its own function, just pass the needed checks.
 [ ] Change setup for init and make the goose migration here.
 
 [ ] Test `createEnv`?
+
 
 
 ## Test cases

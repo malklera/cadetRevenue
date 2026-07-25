@@ -250,31 +250,32 @@ func formatLine(nameNote string, content []string, lineN int, reader *bufio.Read
 	case content[lineN] == "":
 		return 1, "", nil
 	case canonRe.MatchString(content[lineN]):
+		line += content[lineN] + "\n"
 		switch {
 		case lineN+1 == len(content):
 			return 1, "", nil
 		case dayWorkRe.MatchString(content[lineN+1]),
 			dayNoWorkRe.MatchString(content[lineN+1]):
-			return 1, content[lineN], nil
+			return 1, line, nil
 		default:
 			n := nextLineInvalid(nameNote, content[lineN], content[lineN+1], reader)
-			return n + 1, content[lineN], nil
+			return n + 1, line, nil
 		}
 	case dayNoWorkRe.MatchString(content[lineN]):
+		day := strings.Split(content[lineN], ":")
+		line += addPadding(day[0]) + "\n"
+		// remove whitespace
+		line += "m:" + strings.ReplaceAll(day[1], " ", "") + "\n"
+		line += "t:0\n"
 		switch {
 		case lineN+1 == len(content),
 			dayWorkRe.MatchString(content[lineN+1]),
 			dayNoWorkRe.MatchString(content[lineN+1]),
 			canonRe.MatchString(content[lineN+1]):
-			day := strings.Split(content[lineN], ":")
-			line += addPadding(day[0]) + "\n"
-			// remove whitespace
-			line += "m:" + strings.ReplaceAll(day[1], " ", "") + "\n"
-			line += "t:0\n"
 			return 1, line, nil
 		default:
 			n := nextLineInvalid(nameNote, content[lineN], content[lineN+1], reader)
-			return n + 1, content[lineN], nil
+			return n + 1, line, nil
 		}
 	case dayWorkRe.MatchString(content[lineN]):
 		line += addPadding(content[lineN]) + "\n"
@@ -297,7 +298,7 @@ func formatLine(nameNote string, content []string, lineN int, reader *bufio.Read
 			dayNoWorkRe.MatchString(content[lineN+1]),
 			dayWorkRe.MatchString(content[lineN+1]):
 			line += "t:0\n"
-			return 2, line, nil
+			return 1, line, nil
 		case afternoonRe.MatchString(content[lineN+1]):
 			return 1, line, nil
 		default:
