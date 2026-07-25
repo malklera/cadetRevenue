@@ -183,19 +183,32 @@ add the needed 't:0' below.
 
 [x] When testing `formatNote()` ensure it output the first line canon
 
+[x] from the file name take the year
 
+[x] take canon, day-month, morning movements, afternoon movements, expenses
+
+[x] calculate the net profit of the day
+
+[x] Refactor moving related functions to their own file.
+
+[x] Remake the database.
+
+[x] Change the storage of income
+
+
+
+[ ] fix the logic with dayNoWorkRe, check the ones in testFormat to see the error
+
+[ ] fix logic of canonRe, same as above.
+
+[ ] `error saving note '2024-abril-5.txt': UNIQUE constraint failed: entry.date`
+update this error to show which date is the repeated one
 
 [ ] Work on process.go
 
+[ ] add a `version` sub-command
+
 [ ] list all files in formatedDir
-
-[ ] loop through it and extract its content
-
-[ ] from the file name take the year
-
-[ ] take canon, day-month, morning movements, afternoon movements, expenses
-
-[ ] calculate the net profit of the day
 
 [ ] save the day entry into the db
 
@@ -205,8 +218,6 @@ add the needed 't:0' below.
 line or the formated one, currently i show the original, so original: T:0, formated:
 t:0
 
-[ ] Refactor moving related functions to their own file.
-
 [ ] At some point use the `validDate()` to ensure i have possible dates,
 not actually correct ones yet.
 
@@ -215,13 +226,9 @@ make each interaction its own function, just pass the needed checks.
 
 [ ] Calculate the revenue of a given month.
 
-[ ] Change setup for init.
+[ ] Change setup for init and make the goose migration here.
 
-[ ] Remake the database.
-
-[ ] Change the storage of income
-
-[ ] Test `createEnv`
+[ ] Test `createEnv`?
 
 
 ## Test cases

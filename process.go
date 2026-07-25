@@ -119,7 +119,7 @@ func processNote(nameNote string, data []byte) ([]database.Entry, []database.Mov
 			movements = append(movements, morning...)
 			movements = append(movements, afternoon...)
 		default:
-			return nil, nil, fmt.Errorf("line '%s' of file '%s' has the wrong format", content[n], nameNote)
+			return nil, nil, fmt.Errorf("line '%s' has the wrong format", content[n])
 		}
 	}
 	return entries, movements, nil

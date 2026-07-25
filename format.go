@@ -271,7 +271,7 @@ func formatLine(nameNote string, content []string, lineN int, reader *bufio.Read
 			// remove whitespace
 			line += "m:" + strings.ReplaceAll(day[1], " ", "") + "\n"
 			line += "t:0\n"
-			return 3, line, nil
+			return 1, line, nil
 		default:
 			n := nextLineInvalid(nameNote, content[lineN], content[lineN+1], reader)
 			return n + 1, content[lineN], nil
@@ -317,7 +317,6 @@ func formatLine(nameNote string, content []string, lineN int, reader *bufio.Read
 			return n + 1, line, nil
 		}
 	default:
-		fmt.Println("before invalidLine")
 		line, err := invalidLine(nameNote, content[lineN], linerInput, reader)
 		return 1, line, err
 	}
