@@ -291,7 +291,7 @@ func formatLine(nameNote string, content []string, lineN int, reader *bufio.Read
 			return n + 1, line, nil
 		}
 	case morningRe.MatchString(content[lineN]):
-		line += content[lineN] + "\n"
+		line += strings.ReplaceAll(content[lineN], " ", "") + "\n"
 		switch {
 		case lineN+1 == len(content),
 			canonRe.MatchString(content[lineN+1]),
@@ -306,7 +306,7 @@ func formatLine(nameNote string, content []string, lineN int, reader *bufio.Read
 			return n + 1, line, nil
 		}
 	case afternoonRe.MatchString(content[lineN]):
-		line += content[lineN] + "\n"
+		line += strings.ReplaceAll(content[lineN], " ", "") + "\n"
 		switch {
 		case lineN+1 == len(content),
 			canonRe.MatchString(content[lineN+1]),
