@@ -127,3 +127,32 @@ func (q *Queries) ListAllMovements(ctx context.Context) ([]Movement, error) {
 	}
 	return items, nil
 }
+
+const listAvailableDates = `-- name: ListAvailableDates :many
+SELECT date
+FROM entry
+ORDER BY date
+`
+
+func (q *Queries) ListAvailableDates(ctx context.Context) ([]time.Time, error) {
+	rows, err := q.db.QueryContext(ctx, listAvailableDates)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []time.Time
+	for rows.Next() {
+		var date time.Time
+		if err := rows.Scan(&date); err != nil {
+			return nil, err
+		}
+		items = append(items, date)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

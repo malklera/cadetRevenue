@@ -19,3 +19,8 @@ FROM entry;
 -- name: ListAllMovements :many
 SELECT *
 FROM movement;
+
+-- name: ListAvailableDates :many
+SELECT date
+FROM entry
+ORDER BY date;

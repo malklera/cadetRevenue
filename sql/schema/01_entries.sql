@@ -1,7 +1,7 @@
 -- +goose Up
 CREATE TABLE entry (
     id TEXT PRIMARY KEY,
-    date TEXT UNIQUE NOT NULL,
+    date DATE UNIQUE NOT NULL,
     canon INTEGER NOT NULL,
     profit REAL NOT NULL
 );
