@@ -119,10 +119,10 @@ func main() {
 	case "show":
 		fmt.Println("show")
 		showCmd.Parse(os.Args[2:])
-		// if err := showEntries(target, year, month, day); err != nil {
-		// 	fmt.Fprintf(os.Stderr, "showEntries(%s, %d, %d, %d): %v\n", target, year, month, day, err)
-		// 	os.Exit(1)
-		// }
+		if err := showAll(); err != nil {
+			fmt.Fprintf(os.Stderr, "showAll(): %v\n", err)
+			os.Exit(1)
+		}
 	default:
 		fmt.Fprintln(os.Stderr, "wrong sub-command.")
 		setupCmd.Usage()
