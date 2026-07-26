@@ -195,22 +195,24 @@ add the needed 't:0' below.
 
 [x] Change the storage of income
 
+[x] save the day entry into the db
 
+[x] Work on process.go
 
 [x] fix the logic with dayNoWorkRe, check the ones in testFormat to see the error
 
 [x] fix logic of canonRe, same as above.
 
-[ ] `error saving note '2024-abril-5.txt': UNIQUE constraint failed: entry.date`
-update this error to show which date is the repeated one
 
-[ ] Work on process.go
+
+[ ] work on showCmd
+
+[ ] `error saving note '2024-abril-5.txt': UNIQUE constraint failed: entry.date`
+update this error to show which date is the repeated one?
 
 [ ] add a `version` sub-command
 
 [ ] list all files in formatedDir
-
-[ ] save the day entry into the db
 
 [ ] Do i check the file name each time a list all files in a directory?
 
