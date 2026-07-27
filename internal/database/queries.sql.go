@@ -65,6 +65,7 @@ func (q *Queries) CreateMovement(ctx context.Context, arg CreateMovementParams) 
 const listAllEntries = `-- name: ListAllEntries :many
 SELECT id, date, canon, profit
 FROM entry
+ORDER BY date
 `
 
 func (q *Queries) ListAllEntries(ctx context.Context) ([]Entry, error) {

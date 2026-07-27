@@ -14,7 +14,8 @@ id, entry_id, shift, amount
 
 -- name: ListAllEntries :many
 SELECT *
-FROM entry;
+FROM entry
+ORDER BY date;
 
 -- name: ListAllMovements :many
 SELECT *
