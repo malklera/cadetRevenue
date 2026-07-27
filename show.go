@@ -4,12 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"slices"
 	"time"
 
 	"cadetRevenue/internal/database"
 )
-
-// TODO: this is wrong, i should be able to do it in the db
 
 // showAll print to stdout a formated list of all year, month, day availables
 // in the database
@@ -23,23 +22,33 @@ func showAll() error {
 
 	queries := database.New(db)
 
-	entries, err := getAllEntries(ctx, queries)
-	if err != nil {
-		return fmt.Errorf("getAllEntries(ctx, queries): %w", err)
-	}
-
-	for _, e := range entries {
-		fmt.Println(e)
-	}
-
 	dates, err := getAllDates(ctx, queries)
 	if err != nil {
 		return fmt.Errorf("getAllDates(ctx, queries): %w", err)
 	}
 
+	years := []int{}
+	months := []time.Month{}
 	for _, d := range dates {
-		fmt.Println(d)
+		if !slices.Contains(years, d.Year()) {
+			years = append(years, d.Year())
+			months = slices.Delete(months, 0, len(months))
+
+			fmt.Println()
+			fmt.Print(d.Year())
+		}
+
+		if !slices.Contains(months, d.Month()) {
+			months = append(months, d.Month())
+			fmt.Println()
+			fmt.Printf("\t%v", d.Month())
+			fmt.Println()
+			fmt.Printf("\t\t")
+		}
+
+		fmt.Printf("%d, ", d.Day())
 	}
+
 	return nil
 }
 
