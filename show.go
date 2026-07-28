@@ -52,6 +52,7 @@ func showAll() error {
 	return nil
 }
 
+// getAllDates returns the list of all entry.date rows from the DB
 func getAllDates(ctx context.Context, queries *database.Queries) ([]time.Time, error) {
 	dates, err := queries.ListAvailableDates(ctx)
 	if err != nil {
@@ -60,6 +61,8 @@ func getAllDates(ctx context.Context, queries *database.Queries) ([]time.Time, e
 	return dates, err
 }
 
+// getAllEntries is a simple helper function that do select * from entry;
+// for testing and seeing the entry table
 func getAllEntries(ctx context.Context, queries *database.Queries) ([]database.Entry, error) {
 	entries, err := queries.ListAllEntries(ctx)
 	if err != nil {

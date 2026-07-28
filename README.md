@@ -205,9 +205,13 @@ add the needed 't:0' below.
 
 
 
-[ ] work on showCmd
+[x] work on showCmd
 
-[ ] See about erasing the last "," when printing the days
+[ ] See about erasing the last "," when printing the days in showAll()
+
+[ ] Add target flag logic to show
+
+[ ] Add target flag logic to profit
 
 [ ] `error saving note '2024-abril-5.txt': UNIQUE constraint failed: entry.date`
 update this error to show which date is the repeated one?
