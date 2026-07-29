@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	uuid "github.com/gofrs/uuid/v5"
@@ -156,4 +157,35 @@ func (q *Queries) ListAvailableDates(ctx context.Context) ([]time.Time, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const profitDay = `-- name: ProfitDay :one
+SELECT profit
+FROM entry
+WHERE date = ?
+`
+
+func (q *Queries) ProfitDay(ctx context.Context, date time.Time) (float64, error) {
+	row := q.db.QueryRowContext(ctx, profitDay, date)
+	var profit float64
+	err := row.Scan(&profit)
+	return profit, err
+}
+
+const profitMonth = `-- name: ProfitMonth :one
+SELECT SUM(profit)
+FROM entry
+WHERE date >= ? AND date < ?
+`
+
+type ProfitMonthParams struct {
+	Date   time.Time
+	Date_2 time.Time
+}
+
+func (q *Queries) ProfitMonth(ctx context.Context, arg ProfitMonthParams) (sql.NullFloat64, error) {
+	row := q.db.QueryRowContext(ctx, profitMonth, arg.Date, arg.Date_2)
+	var sum sql.NullFloat64
+	err := row.Scan(&sum)
+	return sum, err
 }

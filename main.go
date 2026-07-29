@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/malklera/sliner/pkg/liner"
 	_ "github.com/mattn/go-sqlite3"
@@ -72,14 +73,18 @@ func main() {
 	showCmd.StringVar(&target, "target", ".", "Show data from '--target/entries.db'.")
 	showCmd.StringVar(&target, "t", ".", "Show data from '-t/entries.db'. (shorthand)")
 
-	showCmd.IntVar(&year, "year", 0, "Year to show, use two or four numbers. Empty or 0 show all available.")
-	showCmd.IntVar(&year, "y", 0, "Year to show, use two or four numbers. Empty or 0 show all available. (shorthand)")
+	profitCmd := flag.NewFlagSet("profit", flag.ExitOnError)
+	profitCmd.StringVar(&target, "target", ".", "Calculate profits from '--target/entries.db'.")
+	profitCmd.StringVar(&target, "t", ".", "Calculate profits from '-t/entries.db'. (shorthand)")
 
-	showCmd.IntVar(&month, "month", 0, "Month to show, use one or two digits. Empty or 0 show all available.")
-	showCmd.IntVar(&month, "m", 0, "Month to show, use one or two digits. Empty or 0 show all available. (shorthand)")
+	profitCmd.IntVar(&year, "year", 0, "Year to show, use two or four numbers. Empty or 0 show all available.")
+	profitCmd.IntVar(&year, "y", 0, "Year to show, use two or four numbers. Empty or 0 show all available. (shorthand)")
 
-	showCmd.IntVar(&day, "day", 0, "Day to show, use numbers, one or two digits. Empty or 0 show all available.")
-	showCmd.IntVar(&day, "d", 0, "Day to show, use numbers, one or two digits. Empty or 0 show all available. (shorthand)")
+	profitCmd.IntVar(&month, "month", 0, "Month to show, use one or two digits. Empty or 0 show all available.")
+	profitCmd.IntVar(&month, "m", 0, "Month to show, use one or two digits. Empty or 0 show all available. (shorthand)")
+
+	profitCmd.IntVar(&day, "day", 0, "Day to show, use numbers, one or two digits. Empty or 0 show all available.")
+	profitCmd.IntVar(&day, "d", 0, "Day to show, use numbers, one or two digits. Empty or 0 show all available. (shorthand)")
 
 	if len(os.Args) < 2 {
 		setupCmd.Usage()
@@ -117,11 +122,47 @@ func main() {
 			os.Exit(1)
 		}
 	case "show":
-		fmt.Println("show")
 		showCmd.Parse(os.Args[2:])
 		if err := showAll(); err != nil {
 			fmt.Fprintf(os.Stderr, "showAll(): %v\n", err)
 			os.Exit(1)
+		}
+	case "profit":
+		profitCmd.Parse(os.Args[2:])
+		if year == 0 {
+			fmt.Fprintf(os.Stderr, "Error: has to provide a year.\n")
+			os.Exit(1)
+		}
+		if month == 0 {
+			fmt.Println("profitYear")
+			os.Exit(1)
+		}
+		if day == 0 {
+			date, err := time.Parse(time.DateOnly, fmt.Sprintf("%d-%.2d-%.2d", year, month, 01))
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error: date: time.Parse(time.DateOnly, %d-%d-%d): %v\n", year, month, 01, err)
+				os.Exit(1)
+			}
+			nextDate, err := time.Parse(time.DateOnly, fmt.Sprintf("%d-%.2d-%.2d", year, month+1, 01))
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error: nextDate: time.Parse(time.DateOnly, %d-%d-%d): %v\n", year, month+1, 01, err)
+				os.Exit(1)
+			}
+			if err := showProfitMonth(date, nextDate); err != nil {
+				fmt.Fprintf(os.Stderr, "Error: showProfitMonth(%v, %v): %v", date, nextDate, err)
+				os.Exit(1)
+			}
+		} else {
+			d, err := time.Parse(time.DateOnly, fmt.Sprintf("%d-%.2d-%.2d", year, month, day))
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error: d: time.Parse(time.DateOnly, %d-%d-%d): %v\n", year, month, day, err)
+				os.Exit(1)
+			}
+
+			if err := showProfitDay(d); err != nil {
+				fmt.Fprintf(os.Stderr, "showProfitDay(%v): %v\n", d, err)
+				os.Exit(1)
+			}
 		}
 	default:
 		fmt.Fprintln(os.Stderr, "wrong sub-command.")

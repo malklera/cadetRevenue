@@ -25,3 +25,13 @@ FROM movement;
 SELECT date
 FROM entry
 ORDER BY date;
+
+-- name: ProfitDay :one
+SELECT profit
+FROM entry
+WHERE date = ?;
+
+-- name: ProfitMonth :one
+SELECT SUM(profit)
+FROM entry
+WHERE date >= ? AND date < ?;
