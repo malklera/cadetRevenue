@@ -58,7 +58,7 @@ func getAllDates(ctx context.Context, queries *database.Queries) ([]time.Time, e
 	if err != nil {
 		return nil, err
 	}
-	return dates, err
+	return dates, nil
 }
 
 // getAllEntries is a simple helper function that do select * from entry;
@@ -68,6 +68,6 @@ func getAllEntries(ctx context.Context, queries *database.Queries) ([]database.E
 	if err != nil {
 		return nil, err
 	}
-	return entries, err
+	return entries, nil
 
 }

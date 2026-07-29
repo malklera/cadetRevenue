@@ -240,6 +240,13 @@ make each interaction its own function, just pass the needed checks.
 
 [ ] Test `createEnv`?
 
+[ ] See about just showing year-month with numbers in showProfitMonth
+
+[ ] show help for profit when error of year
+
+[ ] if there are no profits for the given date, show an error indicating that,
+not the stack trace
+
 
 
 ## Test cases
