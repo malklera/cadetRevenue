@@ -21,7 +21,4 @@ go.work.sum
 # env file
 .env
 
-backup/*
-test/*
-test-13-05/*
 *.db
