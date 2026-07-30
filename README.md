@@ -110,7 +110,8 @@ To show the profit of a day, month or year.
 
 # TO DO
 
-[ ] Change setup for init and make the goose migration here.
+[ ] Change setup for init and make the goose migration here, change setup command
+for init.
 
 [ ] add a `version` command.
 
@@ -149,3 +150,20 @@ make each interaction its own function, just pass the needed checks.
 
 [ ] if there are no profits for the given date, show an error indicating that,
 not the stack trace
+
+# Check this
+
+```
+Processing: 2024-abril-5.txt
+error saving note '2024-abril-5.txt': UNIQUE constraint failed: entry.date
+```
+
+```
+Processing: 2025-noviembre-4.txt
+error processing note '2025-noviembre-4.txt': dayWorkRe.MatchString(martes 04/11): processProcedings(t: 7300+2000+2500+2300+3000+5500-3300): strings.Contains( 7300+2000+2500+2300+3000+5500-3300, "-"): strconv.ParseInt( 7300, 10, 64): strconv.ParseInt: parsing " 7300": invalid syntax
+```
+
+```
+Processing: 2026-abril-1.txt
+error saving note '2026-abril-1.txt': UNIQUE constraint failed: entry.date
+```
