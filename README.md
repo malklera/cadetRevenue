@@ -151,6 +151,12 @@ make each interaction its own function, just pass the needed checks.
 [ ] if there are no profits for the given date, show an error indicating that,
 not the stack trace
 
+[ ] `m: 100` is valid to format, my function strip the space, but it is not valid
+for processing, meaning when i have this `m: 100- 300` and by accident modify to
+`m: 100-300` it is considered valid, but the space do not get striped
+
+[ ] improve the `show` output, the years need to be more apparent
+
 # Check this
 
 ```
